@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Aula Digital</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+<header id="header">
+  <a class="logo" href="#">
+    <div class="logo-icon">📚</div>
+    Mi Aula Digital
+  </a>
+  <nav>
+    <a href="#funciones">Funciones</a>
+    <a href="#roles">Roles</a>
+    <a href="#beneficios">Beneficios</a>
+  </nav>
+  <button class="btn-login" onclick="openModal()">Iniciar Sesión</button>
+</header>
+
+<section class="hero" id="inicio">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-badge"><span>✨</span> Plataforma de Seguimiento Escolar</div>
+    <h1>Conectando a docentes<br>y familias con <em>propósito</em></h1>
+    <p>Un espacio digital organizado donde el docente registra, los padres consultan, y juntos fortalecen el desarrollo académico y conductual de cada alumno.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="openModal()">Acceder ahora →</button>
+      <a href="#funciones" class="btn-outline">Ver funciones</a>
+    </div>
+  </div>
+
+  <div class="hero-illustration">
+    <div class="hero-card" style="animation: fadeUp .9s .5s ease both; opacity:0;">
+      <div class="card-header">
+        <div class="card-avatar av-teal">📊</div>
+        <div>
+          <div class="card-title">Seguimiento académico</div>
+          <div class="card-sub">Grupo 3°B — semana actual</div>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);margin-bottom:.25rem;">
+          <span>Asistencia</span><span style="color:var(--teal);font-weight:600;">92%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width:92%"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:.8rem;color:var(--muted);margin:.5rem 0 .25rem;">
+          <span>Tareas entregadas</span><span style="color:var(--accent);font-weight:600;">78%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width:78%;background:linear-gradient(90deg,var(--accent),#ffd45c);"></div>
+        </div>
+      </div>
+      <div class="pill-row">
+        <span class="pill pill-green">✓ Al día</span>
+        <span class="pill pill-amber">⚠ 3 pendientes</span>
+      </div>
+    </div>
+
+    <div class="hero-card" style="animation: fadeUp .9s .7s ease both; opacity:0; margin-left:2rem;">
+      <div class="card-header">
+        <div class="card-avatar av-rose">💬</div>
+        <div>
+          <div class="card-title">Nuevo mensaje <span class="notif-dot"></span></div>
+          <div class="card-sub">Mamá de Sofía — hace 5 min</div>
+        </div>
+      </div>
+      <p style="font-size:.84rem;color:var(--muted);line-height:1.5;">"Buenos días, ¿podría agendar una cita para hablar sobre las calificaciones de Sofía?"</p>
+      <div class="pill-row" style="margin-top:.8rem;">
+        <span class="pill pill-rose">📅 Cita sugerida</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="stats-band" id="beneficios">
+  <div class="stat-item reveal">
+    <span class="stat-num">6</span>
+    <div class="stat-label">Módulos integrados</div>
+  </div>
+  <div class="stat-item reveal" style="transition-delay:.1s">
+    <span class="stat-num">2</span>
+    <div class="stat-label">Tipos de usuario</div>
+  </div>
+  <div class="stat-item reveal" style="transition-delay:.2s">
+    <span class="stat-num">100%</span>
+    <div class="stat-label">Acceso seguro</div>
+  </div>
+  <div class="stat-item reveal" style="transition-delay:.3s">
+    <span class="stat-num">24/7</span>
+    <div class="stat-label">Disponibilidad</div>
+  </div>
+</div>
+
+<section class="section" id="funciones">
+  <div class="section-tag">📋 Funcionalidades</div>
+  <h2 class="section-title">Todo lo que necesitas<br>en un solo lugar</h2>
+  <p class="section-sub">Módulos diseñados para simplificar el trabajo del docente y mantener a las familias siempre informadas.</p>
+
+  <div class="features-grid">
+    <div class="feat-card c1 reveal">
+      <div class="feat-icon ic1">📝</div>
+      <h3>Observaciones & Conducta</h3>
+      <p>El docente registra notas de comportamiento y asigna indicadores visuales de desempeño conductual por alumno.</p>
+    </div>
+    <div class="feat-card c2 reveal" style="transition-delay:.1s">
+      <div class="feat-icon ic2">📅</div>
+      <h3>Tareas & Calificaciones</h3>
+      <p>Registra tareas asignadas por fecha y calificaciones por actividad o periodo. Con filtrado por alumno o fecha.</p>
+    </div>
+    <div class="feat-card c3 reveal" style="transition-delay:.2s">
+      <div class="feat-icon ic3">✅</div>
+      <h3>Control de Asistencia</h3>
+      <p>Registro diario de asistencia por alumno con seguimiento histórico y consulta rápida de ausencias.</p>
+    </div>
+    <div class="feat-card c4 reveal" style="transition-delay:.05s">
+      <div class="feat-icon ic4">📢</div>
+      <h3>Avisos Escolares</h3>
+      <p>Publicación de avisos generales sobre juntas, cooperaciones o eventos con notificación inmediata a los padres.</p>
+    </div>
+    <div class="feat-card c5 reveal" style="transition-delay:.15s">
+      <div class="feat-icon ic5">💬</div>
+      <h3>Chat Docente-Padres</h3>
+      <p>Canal de comunicación privado con historial de mensajes y notificaciones en tiempo real para ambas partes.</p>
+    </div>
+    <div class="feat-card c6 reveal" style="transition-delay:.25s">
+      <div class="feat-icon ic6">🗓️</div>
+      <h3>Agenda de Citas</h3>
+      <p>Los padres eligen horarios disponibles habilitados por el docente. Confirmación automática de la cita.</p>
+    </div>
+  </div>
+</section>
+
+<section class="roles-section" id="roles">
+  <div style="position:relative;z-index:1;text-align:center;">
+    <div class="section-tag" style="background:rgba(44,168,160,0.2);color:#5ee0d8;">👥 Accesos</div>
+    <h2 class="section-title" style="color:white;">Dos roles, una plataforma</h2>
+    <p class="section-sub" style="color:rgba(255,255,255,0.55);margin:0 auto;">
+      Cada usuario accede sólo a lo que le corresponde. Seguridad y privacidad garantizadas.
+    </p>
+  </div>
+  <div class="roles-grid">
+    <div class="role-card teacher reveal" onclick="openModal('docente')">
+      <span class="role-emoji">👩‍🏫</span>
+      <h3>Docente</h3>
+      <p>Acceso completo de administración. Registra, edita y controla toda la información académica del grupo.</p>
+      <ul class="role-list">
+        <li>Gestión completa de alumnos</li>
+        <li>Registro de observaciones y calificaciones</li>
+        <li>Publicación de avisos</li>
+        <li>Responde mensajes desde su panel</li>
+        <li>Habilita horarios para citas</li>
+        <li>Controla el rol de aseo</li>
+      </ul>
+    </div>
+    <div class="role-card parent reveal" style="transition-delay:.15s" onclick="openModal('padre')">
+      <span class="role-emoji">👨‍👩‍👧</span>
+      <h3>Padres de Familia</h3>
+      <p>Acceso seguro y restringido a la información de su hijo. Comunicación directa con el docente.</p>
+      <ul class="role-list">
+        <li>Consulta de calificaciones y tareas</li>
+        <li>Visualización de asistencia</li>
+        <li>Recepción de avisos escolares</li>
+        <li>Envío de mensajes al docente</li>
+        <li>Agendamiento de citas</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p style="margin-bottom:.4rem;">
+    <strong>Mi Aula Digital</strong> — Plataforma de Seguimiento Escolar
+  </p>
+  <p>Desarrollado por Dulce Mariana Andrade Olvera & Elia Guadalupe Arteaga Delgado • Ingeniería en Sistemas Computacionales</p>
+</footer>
+
+<div class="modal-overlay" id="modal" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h2>Bienvenido 👋</h2>
+    <p class="modal-sub">Accede a Mi Aula Digital con tu cuenta</p>
+    <div class="tab-row">
+      <button class="tab-btn active" id="tab-padre" onclick="switchTab('padre')">👨‍👩‍👧 Soy padre de familia</button>
+      <button class="tab-btn" id="tab-docente" onclick="switchTab('docente')">👩‍🏫 Soy docente</button>
+    </div>
+    <div id="form-padre">
+      <div class="form-group">
+        <label>Nombre del alumno</label>
+        <input type="text" placeholder="Ej. Sofía García López" id="alumno-nombre">
+      </div>
+      <div class="form-group">
+        <label>Fecha de nacimiento del alumno</label>
+        <input type="date" id="alumno-fecha">
+      </div>
+      <button class="btn-submit" onclick="loginPadre()">Acceder →</button>
+    </div>
+    <div id="form-docente" style="display:none">
+      <div class="form-group">
+        <label>Usuario</label>
+        <input type="text" placeholder="usuario_docente" id="doc-user">
+      </div>
+      <div class="form-group">
+        <label>Contraseña</label>
+        <input type="password" placeholder="••••••••" id="doc-pass">
+      </div>
+      <button class="btn-submit" onclick="loginDocente()">Acceder →</button>
+    </div>
+    <p id="login-error" style="display:none;color:var(--rose);font-size:.82rem;text-align:center;margin-top:.8rem;"></p>
+  </div>
+</div>
+
+<script src="/js/script.js"></script>
+</body>
+</html>
