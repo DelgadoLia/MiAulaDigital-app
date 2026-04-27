@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Aula Digital — Panel Docente</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">📚</div>
+    <div>
+      <span>Mi Aula Digital</span>
+      <small>Panel Docente</small>
+    </div>
+  </div>
+ 
+  <div class="nav-section-label">Principal</div>
+  <div class="nav-item active" onclick="goTo('dashboard',this)">
+    <span class="nav-icon">🏠</span> Inicio
+  </div>
+  <div class="nav-item" onclick="goTo('alumnos',this)">
+    <span class="nav-icon">👤</span> Alumnos
+  </div>
+  <div class="nav-item" onclick="goTo('calificaciones',this)">
+    <span class="nav-icon">📊</span> Calificaciones
+  </div>
+ 
+  <div class="nav-section-label">Gestión</div>
+  <div class="nav-item" onclick="goTo('observaciones',this)">
+    <span class="nav-icon">📝</span> Observaciones
+  </div>
+  <div class="nav-item" onclick="goTo('asistencia',this)">
+    <span class="nav-icon">✅</span> Asistencia
+  </div>
+  <div class="nav-item" onclick="goTo('avisos',this)">
+    <span class="nav-icon">📢</span> Avisos
+  </div>
+ 
+  <div class="nav-section-label">Comunicación</div>
+  <div class="nav-item" onclick="goTo('chat',this)">
+    <span class="nav-icon">💬</span> Mensajes
+    <span class="nav-badge">3</span>
+  </div>
+  <div class="nav-item" onclick="goTo('citas',this)">
+    <span class="nav-icon">🗓️</span> Citas
+    <span class="nav-badge">2</span>
+  </div>
+  <div class="nav-item" onclick="goTo('aseo',this)">
+    <span class="nav-icon">🧹</span> Rol de Aseo
+  </div>
+ 
+  <div class="sidebar-footer">
+    <div class="teacher-profile">
+      <div class="teacher-avatar">👩‍🏫</div>
+      <div>
+        <div class="teacher-name">Profesor. Hector</div>
+        <div class="teacher-role">3°B · Primaria</div>
+      </div>
+      <button class="btn-logout" title="Cerrar sesión">⏻</button>
+    </div>
+  </div>
+</aside>
+ 
+<!-- ── MAIN ── -->
+<main class="main">
+ 
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1 id="page-title">Inicio</h1>
+      <p id="page-sub">Grupo 3°B — ciclo escolar 2025-2026</p>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-date" id="today-date"></div>
+      <div class="notif-btn">🔔<div class="notif-dot"></div></div>
+    </div>
+  </div>
+ 
+  <!-- ══ DASHBOARD ══ -->
+  <div class="page active" id="p-dashboard">
+    <div class="kpi-grid">
+      <div class="kpi-card kc1">
+        <div class="kpi-icon">👥</div>
+        <div class="kpi-num">28</div>
+        <div class="kpi-label">Alumnos activos</div>
+        <div class="kpi-trend trend-up">↑ 0 cambios este mes</div>
+      </div>
+      <div class="kpi-card kc2">
+        <div class="kpi-icon">✅</div>
+        <div class="kpi-num">92%</div>
+        <div class="kpi-label">Asistencia hoy</div>
+        <div class="kpi-trend trend-up">↑ +2% vs semana pasada</div>
+      </div>
+      <div class="kpi-card kc3">
+        <div class="kpi-icon">📝</div>
+        <div class="kpi-num">8.4</div>
+        <div class="kpi-label">Promedio grupal</div>
+        <div class="kpi-trend trend-up">↑ Subió 0.3 este bimestre</div>
+      </div>
+      <div class="kpi-card kc4">
+        <div class="kpi-icon">💬</div>
+        <div class="kpi-num">3</div>
+        <div class="kpi-label">Mensajes nuevos</div>
+        <div class="kpi-trend trend-dn">⚠ Sin responder</div>
+      </div>
+    </div>
+ 
+    <div class="dash-grid">
+      <div class="card">
+        <div class="card-title-row">
+          <span class="card-heading">Alumnos destacados 🌟</span>
+          <span class="view-all" onclick="goTo('alumnos',null)">Ver todos →</span>
+        </div>
+        <div id="dash-alumnos-list"></div>
+      </div>
+      <div class="card">
+        <div class="card-title-row">
+          <span class="card-heading">Actividad reciente</span>
+        </div>
+        <div class="activity-item">
+          <div class="act-icon ai-teal">📝</div>
+          <div><div class="act-text">Observación registrada para <b>Carlos M.</b></div><div class="act-time">Hace 10 minutos</div></div>
+        </div>
+        <div class="activity-item">
+          <div class="act-icon ai-rose">💬</div>
+          <div><div class="act-text">Nuevo mensaje de mamá de <b>Sofía G.</b></div><div class="act-time">Hace 25 minutos</div></div>
+        </div>
+        <div class="activity-item">
+          <div class="act-icon ai-amber">📅</div>
+          <div><div class="act-text">Cita confirmada con familia de <b>Luis R.</b></div><div class="act-time">Hace 1 hora</div></div>
+        </div>
+        <div class="activity-item">
+          <div class="act-icon ai-purple">📢</div>
+          <div><div class="act-text">Aviso publicado: <b>Junta mensual</b></div><div class="act-time">Hoy 8:30 AM</div></div>
+        </div>
+        <div class="activity-item">
+          <div class="act-icon ai-teal">✅</div>
+          <div><div class="act-text">Asistencia registrada para <b>3°B</b></div><div class="act-time">Hoy 7:55 AM</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- ══ ALUMNOS ══ -->
+  <div class="page" id="p-alumnos">
+    <div class="section-heading">Alumnos</div>
+    <div class="section-desc">Directorio completo del grupo 3°B</div>
+    <div class="toolbar">
+      <input class="search-input" type="text" placeholder="🔍  Buscar alumno..." oninput="filterAlumnos(this.value)">
+      <button class="btn-action" onclick="openAddAlumno()">+ Agregar alumno</button>
+    </div>
+    <div class="tabla-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Nombre</th><th>Fecha nac.</th><th>Promedio</th><th>Asistencia</th><th>Estado</th><th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="alumnos-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+ 
+  <!-- ══ CALIFICACIONES ══ -->
+  <div class="page" id="p-calificaciones">
+    <div class="section-heading">Calificaciones</div>
+    <div class="section-desc">Registro de tareas y calificaciones por alumno y actividad</div>
+    <div class="toolbar">
+      <input class="search-input" type="text" placeholder="🔍  Buscar alumno..." oninput="filterCalif(this.value)">
+      <select class="filter-select" onchange="filterByMateria(this.value)">
+        <option value="">Todas las materias</option>
+        <option>Español</option><option>Matemáticas</option><option>Ciencias</option>
+        <option>Historia</option><option>Educación Física</option>
+      </select>
+      <button class="btn-action" onclick="openAddTarea()">+ Nueva actividad</button>
+    </div>
+    <div class="tabla-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Alumno</th>
+            <th>Español</th><th>Matemáticas</th><th>Ciencias</th>
+            <th>Historia</th><th>Ed. Física</th>
+            <th>Promedio</th><th>Guardar</th>
+          </tr>
+        </thead>
+        <tbody id="calif-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+ 
+  <!-- ══ OBSERVACIONES ══ -->
+  <div class="page" id="p-observaciones">
+    <div class="section-heading">Observaciones & Conducta</div>
+    <div class="section-desc">Notas de comportamiento e indicadores visuales por alumno</div>
+ 
+    <div class="obs-form">
+      <div style="font-size:.95rem;font-weight:700;color:var(--deep);margin-bottom:1rem;">➕ Nueva observación</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Alumno</label>
+          <select class="form-control" id="obs-select-alumno"></select>
+        </div>
+        <div class="form-group">
+          <label>Fecha</label>
+          <input type="date" class="form-control" id="obs-fecha">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:.9rem;">
+        <label>Descripción</label>
+        <textarea class="form-control" id="obs-desc" placeholder="Describe la observación o comportamiento..."></textarea>
+      </div>
+      <div class="form-group" style="margin-bottom:1rem;">
+        <label>Etiquetas</label>
+        <div class="tags-row" id="tags-row">
+          <button class="tag-toggle" onclick="toggleTag(this,'pos','sel-pos')">✅ Participación</button>
+          <button class="tag-toggle" onclick="toggleTag(this,'pos','sel-pos')">⭐ Esfuerzo</button>
+          <button class="tag-toggle" onclick="toggleTag(this,'neg','sel-neg')">⚠ Conducta</button>
+          <button class="tag-toggle" onclick="toggleTag(this,'neg','sel-neg')">😔 Tarea pendiente</button>
+          <button class="tag-toggle" onclick="toggleTag(this,'neu','sel-neu')">📌 Nota general</button>
+          <button class="tag-toggle" onclick="toggleTag(this,'pos','sel-pos')">🌟 Destacado</button>
+        </div>
+      </div>
+      <button class="btn-action" onclick="addObservacion()">Guardar observación</button>
+    </div>
+ 
+    <div class="obs-grid" id="obs-list"></div>
+  </div>
+ 
+  <!-- ══ ASISTENCIA ══ -->
+  <div class="page" id="p-asistencia">
+    <div class="section-heading">Control de Asistencia</div>
+    <div class="section-desc">Registro diario — marca P (presente), F (falta) o J (justificada)</div>
+    <div class="toolbar">
+      <input type="date" class="filter-select" id="asist-date">
+      <button class="btn-action" onclick="saveAsistencia()">💾 Guardar registro</button>
+      <button class="btn-secondary" onclick="markAll('P')">✔ Todos presentes</button>
+    </div>
+    <div class="asist-table-wrap">
+      <table class="asist-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Alumno</th><th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th>
+            <th>Hoy</th><th>Resumen semana</th>
+          </tr>
+        </thead>
+        <tbody id="asist-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+ 
+  <!-- ══ AVISOS ══ -->
+  <div class="page" id="p-avisos">
+    <div class="section-heading">Avisos Escolares</div>
+    <div class="section-desc">Publica comunicados para todos los padres de familia</div>
+ 
+    <div class="aviso-form">
+      <div style="font-size:.95rem;font-weight:700;color:var(--deep);margin-bottom:1rem;">📢 Publicar nuevo aviso</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Título del aviso</label>
+          <input type="text" class="form-control" id="aviso-titulo" placeholder="Ej. Junta de padres">
+        </div>
+        <div class="form-group">
+          <label>Categoría</label>
+          <select class="form-control" id="aviso-cat">
+            <option>📅 Evento</option>
+            <option>💰 Cooperación</option>
+            <option>📋 Información</option>
+            <option>⚠ Urgente</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:1rem;">
+        <label>Contenido del aviso</label>
+        <textarea class="form-control" id="aviso-body" placeholder="Escribe el detalle del aviso..." style="min-height:80px;"></textarea>
+      </div>
+      <button class="btn-action" onclick="publishAviso()">📤 Publicar aviso</button>
+    </div>
+ 
+    <div id="avisos-list"></div>
+  </div>
+ 
+  <!-- ══ CHAT ══ -->
+  <div class="page" id="p-chat">
+    <div class="chat-layout">
+      <div class="chat-sidebar">
+        <div class="chat-sidebar-header">
+          <div style="font-size:.95rem;font-weight:700;color:var(--deep);">💬 Mensajes</div>
+          <input class="chat-search" type="text" placeholder="Buscar conversación...">
+        </div>
+        <div class="chat-contacts" id="chat-contacts"></div>
+      </div>
+      <div class="chat-main">
+        <div class="chat-header" id="chat-header">
+          <div class="contact-av av2">SC</div>
+          <div class="chat-header-info">
+            <div class="chat-header-name">Mamá de Sofía García</div>
+            <div class="chat-header-sub">Alumna: Sofía García — 3°B</div>
+          </div>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-area">
+          <input class="chat-input" type="text" id="chat-input" placeholder="Escribe un mensaje..." onkeydown="if(event.key==='Enter')sendMsg()">
+          <button class="btn-send" onclick="sendMsg()">➤</button>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- ══ CITAS ══ -->
+  <div class="page" id="p-citas">
+    <div class="section-heading">Agenda de Citas</div>
+    <div class="section-desc">Habilita horarios y gestiona las citas con familias</div>
+    <div class="citas-layout">
+      <div>
+        <div class="card" style="margin-bottom:1.2rem;">
+          <div class="calendar-header">
+            <span class="cal-month" id="cal-month-label">Marzo 2026</span>
+            <div class="cal-nav">
+              <button class="cal-btn" onclick="changeMonth(-1)">‹</button>
+              <button class="cal-btn" onclick="changeMonth(1)">›</button>
+            </div>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
+        <div class="card">
+          <div class="card-title-row"><span class="card-heading">Habilitar horario disponible</span></div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Fecha</label>
+              <input type="date" class="form-control" id="new-cita-fecha">
+            </div>
+            <div class="form-group">
+              <label>Hora</label>
+              <input type="time" class="form-control" id="new-cita-hora">
+            </div>
+          </div>
+          <button class="btn-action" onclick="addSlot()">+ Agregar horario</button>
+        </div>
+      </div>
+      <div>
+        <div class="card-title-row" style="margin-bottom:.8rem;">
+          <span class="card-heading">Citas del día</span>
+          <button class="btn-secondary" style="font-size:.78rem;padding:.35rem .9rem;" onclick="openAddCita()">+ Agendar manual</button>
+        </div>
+        <div id="citas-list"></div>
+      </div>
+    </div>
+  </div>
+ 
+  <!-- ══ ASEO ══ -->
+  <div class="page" id="p-aseo">
+    <div class="section-heading">Rol de Aseo</div>
+    <div class="section-desc">Asignación semanal de responsabilidades de limpieza del salón</div>
+    <div class="toolbar">
+      <button class="btn-action" onclick="shuffleAseo()">🔀 Reorganizar semana</button>
+    </div>
+    <div class="aseo-grid" id="aseo-grid"></div>
+  </div>
+ 
+</main>
+ 
+<!-- ── MODAL AGREGAR ALUMNO ── -->
+<div class="overlay" id="modal-alumno">
+  <div class="modal-box">
+    <button class="modal-close-btn" onclick="closeOverlay('modal-alumno')">✕</button>
+    <div class="modal-title">Agregar alumno</div>
+    <div class="modal-sub">Registra un nuevo alumno al grupo</div>
+    <div class="form-full">
+      <div class="form-group-full"><label>Nombre completo</label><input type="text" class="form-control" id="new-alumno-nombre" placeholder="Nombre(s) Apellido Apellido"></div>
+      <div class="form-row">
+        <div class="form-group-full"><label>Fecha de nacimiento</label><input type="date" class="form-control" id="new-alumno-fecha"></div>
+        <div class="form-group-full"><label>CURP</label><input type="text" class="form-control" id="new-alumno-curp" placeholder="XXXXX..."></div>
+      </div>
+      <button class="btn-action" onclick="saveAlumno()">Guardar alumno</button>
+    </div>
+  </div>
+</div>
+ 
+<!-- ── MODAL NUEVA TAREA/ACTIVIDAD ── -->
+<div class="overlay" id="modal-tarea">
+  <div class="modal-box">
+    <button class="modal-close-btn" onclick="closeOverlay('modal-tarea')">✕</button>
+    <div class="modal-title">Nueva actividad</div>
+    <div class="modal-sub">Registra una tarea o actividad evaluable</div>
+    <div class="form-full">
+      <div class="form-group-full"><label>Nombre de la actividad</label><input type="text" class="form-control" id="new-tarea-nombre" placeholder="Ej. Examen bimestral"></div>
+      <div class="form-row">
+        <div class="form-group-full"><label>Materia</label>
+          <select class="form-control" id="new-tarea-materia">
+            <option>Español</option><option>Matemáticas</option><option>Ciencias</option>
+            <option>Historia</option><option>Educación Física</option>
+          </select>
+        </div>
+        <div class="form-group-full"><label>Fecha de entrega</label><input type="date" class="form-control" id="new-tarea-fecha"></div>
+      </div>
+      <button class="btn-action" onclick="closeOverlay('modal-tarea')">Crear actividad</button>
+    </div>
+  </div>
+</div>
+ 
+<!-- ── MODAL AGENDAR CITA ── -->
+<div class="overlay" id="modal-cita">
+  <div class="modal-box">
+    <button class="modal-close-btn" onclick="closeOverlay('modal-cita')">✕</button>
+    <div class="modal-title">Agendar cita</div>
+    <div class="modal-sub">Registra una cita con un padre de familia</div>
+    <div class="form-full">
+      <div class="form-group-full"><label>Padre / Tutor</label><input type="text" class="form-control" id="nc-padre" placeholder="Nombre completo"></div>
+      <div class="form-group-full"><label>Alumno</label><select class="form-control" id="nc-alumno-select"></select></div>
+      <div class="form-row">
+        <div class="form-group-full"><label>Fecha</label><input type="date" class="form-control" id="nc-fecha"></div>
+        <div class="form-group-full"><label>Hora</label><input type="time" class="form-control" id="nc-hora"></div>
+      </div>
+      <div class="form-group-full"><label>Motivo</label><textarea class="form-control" id="nc-motivo" placeholder="¿De qué trata la cita?"></textarea></div>
+      <button class="btn-action" onclick="saveCita()">Confirmar cita</button>
+    </div>
+  </div>
+</div>
+<script src="js/script.js"></script>
+</body>
+</html>
