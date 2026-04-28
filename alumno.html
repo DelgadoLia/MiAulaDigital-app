@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Aula Digital — Alumno</title>
+<link rel="icon" type="image/png" href="/logo.png">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+
+  <div class="sidebar-logo">
+    <div class="logo-icon">
+      <img src="logo.png" alt="Logo">
+    </div>
+    <div>
+      <span>Mi Aula Digital</span>
+      <small>Panel Alumno</small>
+    </div>
+  </div>
+
+  <div class="nav-section-label">Principal</div>
+
+  <div class="nav-item active" onclick="goTo('dashboard',this)">
+    <span class="nav-icon">🏠</span> Inicio
+  </div>
+
+  <div class="nav-item" onclick="goTo('calificaciones',this)">
+    <span class="nav-icon">📊</span> Calificaciones
+  </div>
+
+  <div class="nav-item" onclick="goTo('tareas',this)">
+    <span class="nav-icon">📚</span> Tareas
+  </div>
+
+  <div class="nav-item" onclick="goTo('asistencia',this)">
+    <span class="nav-icon">✅</span> Asistencia
+  </div>
+
+  <div class="nav-section-label">Comunicación</div>
+
+  <div class="nav-item" onclick="goTo('avisos',this)">
+    <span class="nav-icon">📢</span> Avisos
+  </div>
+
+  <div class="nav-item" onclick="goTo('chat',this)">
+    <span class="nav-icon">💬</span> Mensajes
+    <span class="nav-badge">2</span>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="teacher-profile">
+      <div class="teacher-avatar">🧑‍🎓</div>
+      <div>
+        <div class="teacher-name">Juan Pérez</div>
+        <div class="teacher-role">3°B · Primaria</div>
+      </div>
+      <button class="btn-logout">⏻</button>
+    </div>
+  </div>
+
+</aside>
+
+<!-- ── MAIN ── -->
+<main class="main">
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div>
+    <h1 id="page-title">Inicio</h1>
+    <p>Bienvenido a tu panel académico</p>
+  </div>
+</div>
+
+<!-- ══ DASHBOARD ══ -->
+<div class="page active" id="p-dashboard">
+
+  <div class="kpi-grid">
+
+    <div class="kpi-card kc1">
+      <div class="kpi-icon">📊</div>
+      <div class="kpi-num">8.7</div>
+      <div class="kpi-label">Promedio</div>
+    </div>
+
+    <div class="kpi-card kc2">
+      <div class="kpi-icon">✅</div>
+      <div class="kpi-num">95%</div>
+      <div class="kpi-label">Asistencia</div>
+    </div>
+
+    <div class="kpi-card kc3">
+      <div class="kpi-icon">📚</div>
+      <div class="kpi-num">3</div>
+      <div class="kpi-label">Tareas pendientes</div>
+    </div>
+
+    <div class="kpi-card kc4">
+      <div class="kpi-icon">💬</div>
+      <div class="kpi-num">2</div>
+      <div class="kpi-label">Mensajes nuevos</div>
+    </div>
+
+  </div>
+
+  <div class="dash-grid">
+
+    <!-- Tareas -->
+    <div class="card">
+      <div class="card-title-row">
+        <span class="card-heading">Tareas próximas</span>
+      </div>
+
+      <div class="activity-item">
+        <div class="act-icon ai-amber">📚</div>
+        <div>
+          <div class="act-text"><b>Matemáticas:</b> Ejercicios pág. 45</div>
+          <div class="act-time">Entrega mañana</div>
+        </div>
+      </div>
+
+      <div class="activity-item">
+        <div class="act-icon ai-teal">📖</div>
+        <div>
+          <div class="act-text"><b>Español:</b> Resumen lectura</div>
+          <div class="act-time">Viernes</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Actividad -->
+    <div class="card">
+      <div class="card-heading">Actividad reciente</div>
+
+      <div class="activity-item">
+        <div class="act-icon ai-teal">📊</div>
+        <div>
+          <div class="act-text">Calificación registrada en Matemáticas</div>
+          <div class="act-time">Hoy</div>
+        </div>
+      </div>
+
+      <div class="activity-item">
+        <div class="act-icon ai-purple">📢</div>
+        <div>
+          <div class="act-text">Nuevo aviso publicado</div>
+          <div class="act-time">Hace 2 horas</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ══ CALIFICACIONES ══ -->
+<div class="page" id="p-calificaciones">
+
+  <div class="section-heading">Mis Calificaciones</div>
+
+  <div class="tabla-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Materia</th>
+          <th>Calificación</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Español</td><td>9</td></tr>
+        <tr><td>Matemáticas</td><td>8</td></tr>
+        <tr><td>Ciencias</td><td>9</td></tr>
+        <tr><td>Historia</td><td>8</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ══ TAREAS ══ -->
+<div class="page" id="p-tareas">
+
+  <div class="section-heading">Mis Tareas</div>
+
+  <div class="card">
+    <b>Matemáticas:</b> Ejercicios página 45  
+    <div class="act-time">Entrega: mañana</div>
+  </div>
+
+  <div class="card">
+    <b>Español:</b> Resumen lectura  
+    <div class="act-time">Entrega: viernes</div>
+  </div>
+
+</div>
+
+<!-- ══ ASISTENCIA ══ -->
+<div class="page" id="p-asistencia">
+
+  <div class="section-heading">Mi Asistencia</div>
+
+  <div class="card">✔ Lunes: Presente</div>
+  <div class="card">✔ Martes: Presente</div>
+  <div class="card">❌ Miércoles: Falta</div>
+
+</div>
+
+<!-- ══ AVISOS ══ -->
+<div class="page" id="p-avisos">
+
+  <div class="section-heading">Avisos</div>
+
+  <div class="card">
+    <b>Junta de padres</b>
+    <p>Viernes a las 5:00 PM</p>
+  </div>
+
+</div>
+
+<!-- ══ CHAT ══ -->
+<div class="page" id="p-chat">
+
+  <div class="section-heading">Mensajes</div>
+
+  <div class="card">
+    <div>👩‍🏫 Profe: Recuerda tu tarea</div>
+    <div style="text-align:right;">Yo: Sí profe 👍</div>
+  </div>
+
+</div>
+
+</main>
+
+<script>
+function goTo(page, el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('p-'+page).classList.add('active');
+
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el) el.classList.add('active');
+
+  document.getElementById('page-title').innerText = el.innerText;
+}
+</script>
+
+</body>
+</html>
