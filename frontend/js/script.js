@@ -1,40 +1,53 @@
-// ── Header sombra al hacer scroll
-window.addEventListener('scroll', () => {
-  document.getElementById('header').classList.toggle('scrolled', window.scrollY > 30);
+// ═══════════════════════════════════════════════════════
+//  CONFIGURACIÓN GLOBAL
+// ═══════════════════════════════════════════════════════
+const API = 'http://localhost:3000/api';
+
+const token   = () => localStorage.getItem('token');
+const hdrs    = () => ({ 
+  'Content-Type': 'application/json', 
+  'Authorization': `Bearer ${token()}` 
 });
 
-// ── Scroll reveal con IntersectionObserver
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(e => {
-    if (e.isIntersecting) e.target.classList.add('visible');
-  });
-}, { threshold: 0.15 });
+async function apiFetch(url, options = {}) {
+  try {
+    const res = await fetch(API + url, { headers: hdrs(), ...options });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.mensaje || 'Error en el servidor');
+    return data;
+  } catch (err) {
+    console.error(`[API] ${url}`, err.message);
+    throw err;
+  }
+}
 
+// ═══════════════════════════════════════════════════════
+//  LANDING — scroll / reveal
+// ═══════════════════════════════════════════════════════
+const headerEl = document.getElementById('header');
+if (headerEl) {
+  window.addEventListener('scroll', () => {
+    headerEl.classList.toggle('scrolled', window.scrollY > 30);
+  });
+}
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.15 });
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
-// ── Abrir modal
+// ═══════════════════════════════════════════════════════
+//  MODAL DE LOGIN
+// ═══════════════════════════════════════════════════════
 function openModal(role = 'padre') {
   document.getElementById('modal').classList.add('open');
   switchTab(role);
   document.getElementById('login-error').style.display = 'none';
 }
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function handleOverlayClick(e) { if (e.target === document.getElementById('modal')) closeModal(); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-// ── Cerrar modal
-function closeModal() {
-  document.getElementById('modal').classList.remove('open');
-}
-
-// ── Cerrar modal al hacer clic fuera
-function handleOverlayClick(e) {
-  if (e.target === document.getElementById('modal')) closeModal();
-}
-
-// ── Cerrar modal con tecla Escape
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeModal();
-});
-
-// ── Cambiar pestaña Padre / Docente
 function switchTab(role) {
   document.getElementById('form-padre').style.display   = role === 'padre'   ? 'block' : 'none';
   document.getElementById('form-docente').style.display = role === 'docente' ? 'block' : 'none';
@@ -42,487 +55,1000 @@ function switchTab(role) {
   document.getElementById('tab-docente').classList.toggle('active', role === 'docente');
   document.getElementById('login-error').style.display = 'none';
 }
-
-// ── Mostrar error en modal
 function showError(msg) {
   const el = document.getElementById('login-error');
-  el.textContent = msg;
-  el.style.display = 'block';
+  el.textContent = msg; el.style.display = 'block';
 }
 
-// ── Login padre de familia
-function loginPadre() {
-  const nombre = document.getElementById('alumno-nombre').value.trim();
-  const fecha  = document.getElementById('alumno-fecha').value;
-  if (!nombre) return showError('⚠ Por favor ingresa el nombre del alumno.');
-  if (!fecha)  return showError('⚠ Por favor ingresa la fecha de nacimiento.');
-  closeModal();
-  alert(`✅ Bienvenido/a. Ingresando como padre de familia de ${nombre}...`);
+document.addEventListener('DOMContentLoaded', () => {
+
+  const pagina = window.location.pathname;
+
+  // PANEL ALUMNO
+  if (pagina.includes('alumno.html')) {
+
+    const rol = localStorage.getItem('rol');
+
+    if (!rol || rol !== 'padre') {
+      window.location.href = 'index.html';
+      return;
+    }
+
+    iniciarPanelAlumno();
+  }
+
+  // PANEL DOCENTE
+  if (pagina.includes('docente.html')) {
+
+    const rol = localStorage.getItem('rol');
+
+    if (!rol || rol !== 'docente') {
+      window.location.href = 'index.html';
+      return;
+    }
+
+    iniciarPanelDocente();
+  }
+
+});
+
+// ── LOGIN DOCENTE → backend real
+async function loginDocente() {
+  const nombreUsuario = document.getElementById('doc-user').value.trim();
+  const contrasena    = document.getElementById('doc-pass').value;
+  if (!nombreUsuario) return showError('⚠ Ingresa tu usuario.');
+  if (!contrasena)    return showError('⚠ Ingresa tu contraseña.');
+  try {
+    const res  = await fetch(`${API}/auth/login/docente`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombreUsuario, contrasena }),
+    });
+    const data = await res.json();
+    if (!res.ok) return showError(data.mensaje);
+    localStorage.setItem('token',  data.token);
+    localStorage.setItem('nombre', data.nombre);
+    localStorage.setItem('rol',    'docente');
+    closeModal();
+    Swal.fire({
+      icon: 'success',
+      title: '¡Bienvenido!',
+      text: `${data.nombre} ha iniciado sesión correctamente`,
+      confirmButtonColor: '#5cbf99',
+      timer: 2000,
+      showConfirmButton: false
+    });
+
+    setTimeout(() => {
+      window.location.href = 'docente.html';
+    }, 2000);
+  } catch { showError('⚠ No se pudo conectar con el servidor.'); }
 }
 
-// ── Login docente
-function loginDocente() {
-  const user = document.getElementById('doc-user').value.trim();
-  const pass = document.getElementById('doc-pass').value;
-  if (!user) return showError('⚠ Ingresa tu usuario.');
-  if (!pass) return showError('⚠ Ingresa tu contraseña.');
-  closeModal();
-  alert(`✅ Bienvenido/a, ${user}. Cargando panel del docente...`);
+// ── LOGIN PADRE → backend real
+async function loginPadre() {
+  const nombre   = document.getElementById('alumno-nombre').value.trim();
+  const fechaNac = document.getElementById('alumno-fecha').value;
+  if (!nombre)   return showError('⚠ Ingresa el nombre del alumno.');
+  if (!fechaNac) return showError('⚠ Ingresa la fecha de nacimiento.');
+  try {
+    const res  = await fetch(`${API}/auth/login/padre`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre, fechaNac }),
+    });
+    const data = await res.json();
+    if (!res.ok) return showError(data.mensaje);
+    localStorage.setItem('token',    data.token);
+    localStorage.setItem('alumno',   data.alumno);
+    localStorage.setItem('alumnoId', data.alumnoId);
+    localStorage.setItem('tutor',    data.tutor);
+    localStorage.setItem('rol',      'padre');
+    closeModal();
+    Swal.fire({
+      icon: 'success',
+      title: '¡Bienvenido!',
+      text: `${data.tutor} ha iniciado sesión correctamente`,
+      confirmButtonColor: '#5cbf99',
+      timer: 2000,
+      showConfirmButton: false
+    });
+
+    setTimeout(() => {
+      window.location.href = 'alumno.html';
+    }, 2000);
+  } catch { showError('⚠ No se pudo conectar con el servidor.'); }
 }
 
-//DOCENTE----------------------------------------------------------------------------------------------------------------------------
-// ═══════════════════════════════════
-//  DATOS
-// ═══════════════════════════════════
-const alumnos = [
-  {id:1,nombre:'Sofía García López',      fecha:'2016-03-14',prom:9.2,asist:96,estado:'Excelente'},
-  {id:2,nombre:'Carlos Martínez Ruiz',    fecha:'2016-07-22',prom:7.8,asist:88,estado:'Regular'},
-  {id:3,nombre:'Valentina Torres Pérez',  fecha:'2016-01-05',prom:9.5,asist:99,estado:'Excelente'},
-  {id:4,nombre:'Luis Ramírez Vega',       fecha:'2016-05-30',prom:6.4,asist:72,estado:'Atención'},
-  {id:5,nombre:'Isabella López Mora',     fecha:'2016-11-18',prom:8.7,asist:93,estado:'Bien'},
-  {id:6,nombre:'Diego Hernández Silva',   fecha:'2016-09-03',prom:8.1,asist:90,estado:'Bien'},
-  {id:7,nombre:'Mariana Castro Ríos',     fecha:'2016-04-12',prom:9.0,asist:97,estado:'Excelente'},
-  {id:8,nombre:'Emilio Gómez Fuentes',    fecha:'2016-06-25',prom:7.2,asist:85,estado:'Regular'},
-  {id:9,nombre:'Camila Vargas Delgado',   fecha:'2016-08-08',prom:8.9,asist:94,estado:'Bien'},
-  {id:10,nombre:'Sebastián Cruz Morales', fecha:'2016-02-19',prom:5.9,asist:68,estado:'Atención'},
-];
- 
-const califData = alumnos.map(a=>({
-  id:a.id, nombre:a.nombre,
-  Español: (Math.random()*3+7).toFixed(1),
-  Matemáticas: (Math.random()*3+7).toFixed(1),
-  Ciencias: (Math.random()*3+7).toFixed(1),
-  Historia: (Math.random()*3+7).toFixed(1),
-  'Ed. Física': (Math.random()*3+7).toFixed(1),
-}));
- 
-let observaciones = [
-  {alumno:'Sofía García',fecha:'2026-03-14',tags:['sel-pos','sel-pos'],tagLabels:['⭐ Esfuerzo','🌟 Destacado'],texto:'Sofía demostró un excelente desempeño en la exposición de ciencias. Participó de manera voluntaria y explicó con claridad.',color:'oc-green'},
-  {alumno:'Carlos Martínez',fecha:'2026-03-13',tags:['sel-neg'],tagLabels:['⚠ Conducta'],texto:'Carlos interrumpió la clase en dos ocasiones. Se habló con él de manera privada sobre la importancia del respeto.',color:'oc-rose'},
-  {alumno:'Luis Ramírez',fecha:'2026-03-12',tags:['sel-neg'],tagLabels:['😔 Tarea pendiente'],texto:'Luis no entregó las tareas de la semana. Se enviará comunicado a sus padres.',color:'oc-amber'},
-  {alumno:'Valentina Torres',fecha:'2026-03-11',tags:['sel-pos'],tagLabels:['✅ Participación'],texto:'Valentina participa activamente en todas las materias. Es un ejemplo positivo para el grupo.',color:'oc-green'},
-];
- 
-let avisos = [
-  {titulo:'Junta mensual de padres',cat:'📅 Evento',cuerpo:'Se les cita el próximo viernes 20 de marzo a las 5:00 PM en el aula de 3°B para tratar temas del bimestre.',fecha:'14 mar 2026',chip:'ac-p'},
-  {titulo:'Cooperación material didáctico',cat:'💰 Cooperación',cuerpo:'Se solicita una cooperación voluntaria de $50 para material de manualidades del proyecto de arte.',fecha:'12 mar 2026',chip:'ac-a'},
-];
- 
-const chatConversaciones = [
-  {id:1,av:'av2',initials:'SC',nombre:'Mamá de Sofía García',preview:'¿Podría agendar una cita?',hora:'09:05',unread:1,online:true,
-    msgs:[
-      {mine:false,text:'Buenos días maestra, ¿podría agendar una cita para hablar sobre las calificaciones de Sofía?',hora:'09:05'},
-      {mine:true, text:'Buenos días, claro que sí. ¿Le viene bien el viernes a las 4 PM?',hora:'09:12'},
-      {mine:false,text:'Sí, perfecto. Muchas gracias 😊',hora:'09:13'},
-    ]
-  },
-  {id:2,av:'av3',initials:'CR',nombre:'Papá de Carlos Ramírez',preview:'Gracias por el aviso',hora:'08:45',unread:0,online:false,
-    msgs:[
-      {mine:false,text:'Maestra, vi el aviso de la cooperación. Voy a llevarla mañana.',hora:'08:40'},
-      {mine:true, text:'Muchas gracias, se lo hago saber.',hora:'08:45'},
-    ]
-  },
-  {id:3,av:'av1',initials:'LR',nombre:'Mamá de Luis Ramírez',preview:'¿Qué pasó con Luis?',hora:'Ayer',unread:2,online:false,
-    msgs:[
-      {mine:false,text:'Buenas tardes, ¿puede contarme más sobre lo que pasó con Luis esta semana?',hora:'Ayer'},
-    ]
-  },
-];
-let currentChat = 0;
- 
-let citas = [
-  {hora:'10:00',ampm:'AM',nombre:'Mamá de Sofía G.',alumno:'Sofía García',motivo:'Revisión de calificaciones del bimestre',status:'Confirmada'},
-  {hora:'12:30',ampm:'PM',nombre:'Papá de Diego H.',alumno:'Diego Hernández',motivo:'Seguimiento conducta',status:'Pendiente'},
-];
- 
-const aseoActividades = ['Barrer','Trapear','Limpiar pizarrón','Organizar pupitres','Recoger basura'];
-const diasSemana = ['Lunes','Martes','Miércoles','Jueves','Viernes'];
-let aseoRol = {};
- 
-// ═══════════════════════════════════
-//  NAV
-// ═══════════════════════════════════
-const titles = {
-  dashboard:'Inicio', alumnos:'Alumnos', calificaciones:'Calificaciones',
+// ── Guard de autenticación
+function requireAuth(rolEsperado) {
+  if (!token() || localStorage.getItem('rol') !== rolEsperado)
+    window.location.href = 'index.html';
+}
+
+// ═══════════════════════════════════════════════════════
+//  NAV — panel docente
+// ═══════════════════════════════════════════════════════
+const pageTitles = {
+  Inicio:'Inicio', alumnos:'Alumnos', calificaciones:'Calificaciones',
   observaciones:'Observaciones', asistencia:'Asistencia', avisos:'Avisos',
   chat:'Mensajes', citas:'Citas', aseo:'Rol de Aseo',
 };
 function goTo(page, el) {
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById('p-'+page).classList.add('active');
-  if(el) el.classList.add('active');
-  document.getElementById('page-title').textContent = titles[page];
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('p-' + page).classList.add('active');
+  if (el) el.classList.add('active');
+  const t = document.getElementById('page-title');
+  if (t) t.textContent = pageTitles[page] || page;
 }
- 
-// ═══════════════════════════════════
-//  FECHA HOY
-// ═══════════════════════════════════
-(function(){
-  const d=new Date();
-  const opts={weekday:'long',year:'numeric',month:'long',day:'numeric'};
-  document.getElementById('today-date').textContent = d.toLocaleDateString('es-MX',opts);
-  document.getElementById('asist-date').value = d.toISOString().split('T')[0];
-  document.getElementById('obs-fecha').value = d.toISOString().split('T')[0];
-})();
- 
-// ═══════════════════════════════════
-//  ALUMNOS TABLE
-// ═══════════════════════════════════
-function renderAlumnos(list){
-  const tb=document.getElementById('alumnos-tbody');
-  tb.innerHTML = list.map((a,i)=>{
-    const sc = a.estado==='Excelente'?'sp-green':a.estado==='Atención'?'sp-rose':'sp-amber';
+
+// ── Fecha de hoy
+function setFechaHoy() {
+  const d   = new Date();
+  const str = d.toLocaleDateString('es-MX', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  const iso = d.toISOString().split('T')[0];
+  const el  = document.getElementById('today-date');   if (el) el.textContent = str;
+  const a   = document.getElementById('asist-date');   if (a)  a.value = iso;
+  const o   = document.getElementById('obs-fecha');    if (o)  o.value = iso;
+}
+setFechaHoy();
+
+// ═══════════════════════════════════════════════════════
+//  ESTADO LOCAL (caché en memoria)
+// ═══════════════════════════════════════════════════════
+let alumnos   = [];
+let califData = [];
+let observaciones = [];
+let avisos    = [];
+let citas     = [];
+let asistData = {};
+let aseoRol   = {};
+let chatConversaciones = [];
+let currentChat = 0;
+
+const aseoActividades = ['Barrer','Trapear','Limpiar pizarrón','Organizar pupitres','Recoger basura'];
+const diasSemana      = ['Lunes','Martes','Miércoles','Jueves','Viernes'];
+const diasCortos      = ['Lun','Mar','Mié','Jue','Vie'];
+
+
+// ═══════════════════════════════════════════════════════
+//  INICIO PANEL DOCENTE
+// ═══════════════════════════════════════════════════════
+async function iniciarPanelDocente() {
+  requireAuth('docente');
+  const nb = document.querySelector('.teacher-name');
+  if (nb) nb.textContent = localStorage.getItem('nombre') || 'Docente';
+  await Promise.all([ cargarAlumnos(), cargarCalificaciones(), cargarAvisos(), cargarCitas(), cargarChatsDocente() ]);
+  setFechaHoy();
+  renderCal();
+  shuffleAseo();
+}
+
+// ═══════════════════════════════════════════════════════
+//  ALUMNOS
+// ═══════════════════════════════════════════════════════
+async function cargarAlumnos() {
+  try {
+    alumnos = await apiFetch('/alumnos');
+    renderAlumnos(alumnos);
+    renderDashAlumnos();
+    poblarSelectAlumnos();
+    cargarAsistenciaHoy();
+  } catch { mostrarToast('⚠ Error al cargar alumnos'); }
+}
+
+function renderAlumnos(list) {
+  const tb = document.getElementById('alumnos-tbody');
+  if (!tb) return;
+  tb.innerHTML = list.map((a, i) => {
+    const prom  = a.promedio ?? '—';
+    const asist = a.porcentajeAsistencia ?? '—';
+    const sc    = a.estado === 'Excelente' ? 'sp-green' : a.estado === 'Atención' ? 'sp-rose' : 'sp-amber';
     return `<tr>
       <td style="color:var(--muted);font-size:.8rem;">${String(i+1).padStart(2,'0')}</td>
       <td><div style="display:flex;align-items:center;gap:.6rem;">
         <div class="alumno-av">${a.nombre[0]}</div>
-        <div><div class="alumno-name">${a.nombre}</div><div class="alumno-sub">${a.fecha}</div></div>
+        <div><div class="alumno-name">${a.nombre}</div><div class="alumno-sub">${a.fechaNac||''}</div></div>
       </div></td>
-      <td style="color:var(--muted);font-size:.83rem;">${a.fecha}</td>
-      <td><span class="grade-badge ${a.prom>=9?'gb-a':a.prom>=7?'gb-b':'gb-c'}">${a.prom}</span></td>
-      <td style="font-size:.84rem;font-weight:600;color:${a.asist>=90?'var(--teal)':a.asist>=80?'#b07500':'var(--rose)'};">${a.asist}%</td>
-      <td><span class="status-pill ${sc}">${a.estado}</span></td>
+      <td style="color:var(--muted);font-size:.83rem;">${a.fechaNac||'—'}</td>
+      <td><span class="grade-badge ${prom>=9?'gb-a':prom>=7?'gb-b':'gb-c'}">${prom}</span></td>
+      <td style="font-size:.84rem;font-weight:600;">${asist}%</td>
+      <td><span class="status-pill ${sc}">${a.estado||'Regular'}</span></td>
       <td>
-        <button class="btn-icon" title="Ver perfil">👁️</button>
-        <button class="btn-icon" title="Observación" onclick="goTo('observaciones',document.querySelectorAll('.nav-item')[3])">📝</button>
-        <button class="btn-icon" title="Chat" onclick="goTo('chat',document.querySelectorAll('.nav-item')[6])">💬</button>
+        <button class="btn-icon" title="Observación"
+          onclick="goTo('observaciones',document.querySelectorAll('.nav-item')[3])">📝</button>
+        <button class="btn-icon" title="Chat"
+          onclick="goTo('chat',document.querySelectorAll('.nav-item')[6])">💬</button>
       </td>
     </tr>`;
   }).join('');
 }
-renderAlumnos(alumnos);
-function filterAlumnos(v){renderAlumnos(alumnos.filter(a=>a.nombre.toLowerCase().includes(v.toLowerCase())));}
- 
-// DASH alumnos
-const dashList = document.getElementById('dash-alumnos-list');
-alumnos.slice(0,5).forEach(a=>{
-  const sc = a.estado==='Excelente'?'sp-green':a.estado==='Atención'?'sp-rose':'sp-amber';
-  dashList.innerHTML += `<div class="alumno-row">
-    <div class="alumno-av">${a.nombre[0]}</div>
-    <div style="flex:1;"><div class="alumno-name">${a.nombre}</div><div class="alumno-sub">Prom: ${a.prom}</div></div>
-    <span class="status-pill ${sc}">${a.estado}</span>
-  </div>`;
-});
- 
-// ═══════════════════════════════════
+
+function renderDashAlumnos() {
+  const el = document.getElementById('dash-alumnos-list');
+  if (!el) return;
+  el.innerHTML = alumnos.slice(0, 5).map(a => {
+    const sc = a.estado === 'Excelente' ? 'sp-green' : a.estado === 'Atención' ? 'sp-rose' : 'sp-amber';
+    return `<div class="alumno-row">
+      <div class="alumno-av">${a.nombre[0]}</div>
+      <div style="flex:1;"><div class="alumno-name">${a.nombre}</div><div class="alumno-sub">Prom: ${a.promedio??'—'}</div></div>
+      <span class="status-pill ${sc}">${a.estado||'Regular'}</span>
+    </div>`;
+  }).join('');
+}
+
+function poblarSelectAlumnos() {
+  ['obs-select-alumno','nc-alumno-select'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = alumnos.map(a => `<option value="${a.id}">${a.nombre}</option>`).join('');
+  });
+}
+
+function filterAlumnos(v) {
+  renderAlumnos(alumnos.filter(a => a.nombre.toLowerCase().includes(v.toLowerCase())));
+}
+
+async function saveAlumno() {
+  const nombre   = document.getElementById('new-alumno-nombre').value.trim();
+  const fechaNac = document.getElementById('new-alumno-fecha').value;
+  const curp     = document.getElementById('new-alumno-curp').value.trim();
+  if (!nombre || !fechaNac) return alert('Completa nombre y fecha.');
+  try {
+    await apiFetch('/alumnos', { method:'POST', body: JSON.stringify({ nombre, fechaNac, curp }) });
+    mostrarToast('✅ Alumno registrado');
+    closeOverlay('modal-alumno');
+    await cargarAlumnos();
+  } catch (err) { mostrarToast('❌ ' + err.message); }
+}
+
+// ═══════════════════════════════════════════════════════
 //  CALIFICACIONES
-// ═══════════════════════════════════
-function renderCalif(list){
-  const materias=['Español','Matemáticas','Ciencias','Historia','Ed. Física'];
-  document.getElementById('calif-tbody').innerHTML = list.map(a=>{
-    const grades = materias.map(m=>`<td><input class="grade-input" type="number" min="0" max="10" step="0.1" value="${a[m]}"></td>`).join('');
-    const prom = (materias.reduce((s,m)=>s+parseFloat(a[m]),0)/materias.length).toFixed(1);
+// ═══════════════════════════════════════════════════════
+async function cargarCalificaciones(bimestre = 1) {
+  try {
+    califData = await apiFetch(`/calificaciones?bimestre=${bimestre}`);
+    renderCalif(califData);
+  } catch { mostrarToast('⚠ Error al cargar calificaciones'); }
+}
+
+function renderCalif(list) {
+  const materias = ['Español','Matemáticas','Ciencias','Historia','Ed. Física'];
+  const tb = document.getElementById('calif-tbody');
+  if (!tb) return;
+
+  // Agrupar calificaciones por alumno (la BD regresa una fila por materia)
+  const porAlumno = {};
+  list.forEach(c => {
+    if (!porAlumno[c.alumnoId])
+      porAlumno[c.alumnoId] = { nombre: c.alumno, notas: {} };
+    porAlumno[c.alumnoId].notas[c.materia] = c.calificacion;
+  });
+
+  tb.innerHTML = Object.entries(porAlumno).map(([alumnoId, data]) => {
+    const grades = materias.map(m =>
+      `<td><input class="grade-input" type="number" min="0" max="10" step="0.1"
+        value="${data.notas[m] ?? ''}"
+        onchange="guardarCalif(${alumnoId},'${m}',this.value)"></td>`
+    ).join('');
+    const vals = materias.map(m => parseFloat(data.notas[m] || 0));
+    const prom = (vals.reduce((s,v) => s+v, 0) / vals.length).toFixed(1);
     return `<tr>
       <td><div style="display:flex;align-items:center;gap:.55rem;">
-        <div class="alumno-av" style="width:28px;height:28px;font-size:.75rem;">${a.nombre[0]}</div>
-        <span style="font-size:.85rem;font-weight:600;">${a.nombre}</span>
+        <div class="alumno-av" style="width:28px;height:28px;font-size:.75rem;">${data.nombre[0]}</div>
+        <span style="font-size:.85rem;font-weight:600;">${data.nombre}</span>
       </div></td>
       ${grades}
       <td><span class="grade-badge ${prom>=9?'gb-a':prom>=7?'gb-b':'gb-c'}">${prom}</span></td>
-      <td><button class="btn-icon" title="Guardar" onclick="this.textContent='✅';setTimeout(()=>this.textContent='💾',1500)">💾</button></td>
+      <td><span id="sv-${alumnoId}">💾</span></td>
     </tr>`;
   }).join('');
 }
-renderCalif(califData);
-function filterCalif(v){renderCalif(califData.filter(a=>a.nombre.toLowerCase().includes(v.toLowerCase())));}
-function filterByMateria(){}
- 
-// ═══════════════════════════════════
-//  OBSERVACIONES
-// ═══════════════════════════════════
-const obsSelect = document.getElementById('obs-select-alumno');
-alumnos.forEach(a=>obsSelect.innerHTML+=`<option>${a.nombre}</option>`);
- 
-function renderObs(){
-  document.getElementById('obs-list').innerHTML = observaciones.map(o=>`
-    <div class="obs-card ${o.color}">
-      <div class="obs-header">
-        <div class="obs-av">${o.alumno[0]}</div>
-        <div><div class="obs-name">${o.alumno}</div><div class="obs-date">${o.fecha}</div></div>
-      </div>
-      <div class="obs-tags">${o.tagLabels.map(t=>{
-        const cl = t.includes('✅')||t.includes('⭐')||t.includes('🌟')?'ot-pos':t.includes('⚠')||t.includes('😔')?'ot-neg':'ot-neu';
-        return `<span class="obs-tag ${cl}">${t}</span>`;
-      }).join('')}</div>
-      <div class="obs-text">${o.texto}</div>
-      <div class="obs-footer">
-        <span style="font-size:.73rem;color:var(--muted);">📎 Ver completo</span>
-        <button class="btn-icon" onclick="deleteObs(this)">🗑️</button>
-      </div>
-    </div>`).join('');
+
+// Se llama automáticamente al cambiar cualquier input de calificación
+async function guardarCalif(alumnoId, materia, calificacion) {
+  const el = document.getElementById(`sv-${alumnoId}`);
+  try {
+    await apiFetch('/calificaciones', {
+      method: 'POST',
+      body:   JSON.stringify({ alumnoId, materia, calificacion: parseFloat(calificacion), bimestre: 1 }),
+    });
+    if (el) { el.textContent = '✅'; setTimeout(() => el.textContent = '💾', 1500); }
+  } catch { if (el) el.textContent = '❌'; }
 }
-renderObs();
- 
-let selectedTags=[];
-function toggleTag(btn,type,cls){
-  const classes=['sel-pos','sel-neg','sel-neu'];
-  const isActive = classes.some(c=>btn.classList.contains(c));
-  if(isActive){btn.classList.remove(...classes);selectedTags=selectedTags.filter(t=>t!==btn.textContent.trim());}
-  else{btn.classList.remove(...classes);btn.classList.add(cls);selectedTags.push(btn.textContent.trim());}
+
+function filterCalif(v) {
+  renderCalif(califData.filter(c => c.alumno?.toLowerCase().includes(v.toLowerCase())));
 }
-function addObservacion(){
-  const alumno=document.getElementById('obs-select-alumno').value;
-  const fecha=document.getElementById('obs-fecha').value;
-  const texto=document.getElementById('obs-desc').value.trim();
-  if(!texto)return alert('Escribe una descripción.');
-  const hasNeg = selectedTags.some(t=>t.includes('⚠')||t.includes('😔'));
-  const color = hasNeg?'oc-rose':selectedTags.length?'oc-green':'oc-amber';
-  observaciones.unshift({alumno:alumno.split(' ').slice(0,2).join(' '),fecha,tags:[],tagLabels:selectedTags.slice(),texto,color});
-  document.getElementById('obs-desc').value='';
-  selectedTags=[];
-  document.querySelectorAll('.tag-toggle').forEach(b=>b.classList.remove('sel-pos','sel-neg','sel-neu'));
-  renderObs();
-}
-function deleteObs(btn){
-  const card=btn.closest('.obs-card');
-  card.style.opacity='0';card.style.transform='scale(.95)';card.style.transition='.3s';
-  setTimeout(()=>{observaciones.splice(card.parentElement?Array.from(card.parentElement.children).indexOf(card):0,1);renderObs();},300);
-}
- 
-// ═══════════════════════════════════
+function filterByMateria() {}
+
+// ═══════════════════════════════════════════════════════
 //  ASISTENCIA
-// ═══════════════════════════════════
-const diasCortos=['Lun','Mar','Mié','Jue','Vie'];
-let asistData = {};
-alumnos.forEach(a=>{
-  asistData[a.id]={};
-  diasCortos.forEach(d=>asistData[a.id][d]=Math.random()>.15?'P':Math.random()>.5?'J':'F');
-  asistData[a.id]['Hoy']='';
-});
- 
-function renderAsistencia(){
-  document.getElementById('asist-tbody').innerHTML = alumnos.map((a,i)=>{
-    const semDias = diasCortos.slice(0,4).map(d=>{
-      const v=asistData[a.id][d];
-      return `<td><button class="asist-btn ${v==='P'?'ab-p sel':v==='F'?'ab-f sel':v==='J'?'ab-j sel':'ab-p'}" onclick="cycleAsist(${a.id},'${d}',this)">${v||'—'}</button></td>`;
+// ═══════════════════════════════════════════════════════
+async function cargarAsistenciaHoy() {
+  const fecha = document.getElementById('asist-date')?.value || new Date().toISOString().split('T')[0];
+  try {
+    const data = await apiFetch(`/asistencia?fecha=${fecha}`);
+    asistData  = {};
+    data.forEach(r => {
+      asistData[r.alumnoId] = asistData[r.alumnoId] || {};
+      asistData[r.alumnoId]['Hoy'] = r.estado || 'P';
+    });
+    // Rellenar alumnos sin registro
+    alumnos.forEach(a => {
+      if (!asistData[a.id]) asistData[a.id] = {};
+      diasCortos.forEach(d => { if (!asistData[a.id][d]) asistData[a.id][d] = 'P'; });
+      if (!asistData[a.id]['Hoy']) asistData[a.id]['Hoy'] = '';
+    });
+  } catch {
+    alumnos.forEach(a => {
+      asistData[a.id] = {};
+      diasCortos.forEach(d => asistData[a.id][d] = 'P');
+      asistData[a.id]['Hoy'] = '';
+    });
+  }
+  renderAsistencia();
+}
+
+function renderAsistencia() {
+  const tb = document.getElementById('asist-tbody');
+  if (!tb) return;
+  tb.innerHTML = alumnos.map((a, i) => {
+    const semDias = diasCortos.slice(0,4).map(d => {
+      const v = asistData[a.id]?.[d] || 'P';
+      return `<td><button class="asist-btn ${v==='P'?'ab-p sel':v==='F'?'ab-f sel':v==='J'?'ab-j sel':'ab-p'}"
+        onclick="cycleAsist(${a.id},'${d}')">${v||'—'}</button></td>`;
     }).join('');
-    const hoy = asistData[a.id]['Hoy'];
+    const hoy    = asistData[a.id]?.['Hoy'] || '';
     const hoyBtn = `<td><div style="display:flex;gap:.3rem;justify-content:center;">
-      <button class="asist-btn ${hoy==='P'?'ab-p sel':'ab-p'}" onclick="setAsist(${a.id},'Hoy','P',this)">P</button>
-      <button class="asist-btn ${hoy==='F'?'ab-f sel':'ab-f'}" onclick="setAsist(${a.id},'Hoy','F',this)">F</button>
-      <button class="asist-btn ${hoy==='J'?'ab-j sel':'ab-j'}" onclick="setAsist(${a.id},'Hoy','J',this)">J</button>
+      <button class="asist-btn ${hoy==='P'?'ab-p sel':'ab-p'}" onclick="setAsist(${a.id},'Hoy','P')">P</button>
+      <button class="asist-btn ${hoy==='F'?'ab-f sel':'ab-f'}" onclick="setAsist(${a.id},'Hoy','F')">F</button>
+      <button class="asist-btn ${hoy==='J'?'ab-j sel':'ab-j'}" onclick="setAsist(${a.id},'Hoy','J')">J</button>
     </div></td>`;
-    const presentes = Object.values(asistData[a.id]).filter(v=>v==='P').length;
-    const faltas = Object.values(asistData[a.id]).filter(v=>v==='F').length;
+    const vals      = Object.values(asistData[a.id] || {});
+    const presentes = vals.filter(v => v === 'P').length;
+    const faltas    = vals.filter(v => v === 'F').length;
     return `<tr>
       <td style="color:var(--muted);font-size:.78rem;">${String(i+1).padStart(2,'0')}</td>
       <td style="font-size:.84rem;font-weight:600;">${a.nombre}</td>
-      ${semDias}
-      ${hoyBtn}
-      <td><span class="resumen-pill" style="background:rgba(44,168,160,0.1);color:var(--teal);">✓ ${presentes}</span>
-          <span class="resumen-pill" style="background:rgba(232,99,122,0.1);color:var(--rose);margin-left:.3rem;">✗ ${faltas}</span></td>
+      ${semDias}${hoyBtn}
+      <td>
+        <span class="resumen-pill" style="background:rgba(92,191,153,0.15);color:#5cbf99;">✓ ${presentes}</span>
+        <span class="resumen-pill" style="background:rgba(240,112,144,0.12);color:#f07090;margin-left:.3rem;">✗ ${faltas}</span>
+      </td>
     </tr>`;
   }).join('');
 }
-renderAsistencia();
-function cycleAsist(id,dia,btn){
-  const ciclo=['P','F','J',''];
-  const cur = asistData[id][dia];
-  const ni = (ciclo.indexOf(cur)+1)%ciclo.length;
-  asistData[id][dia]=ciclo[ni];
+
+function cycleAsist(id, dia) {
+  const ciclo = ['P','F','J',''];
+  if (!asistData[id]) asistData[id] = {};
+  const cur = asistData[id][dia] || '';
+  asistData[id][dia] = ciclo[(ciclo.indexOf(cur)+1) % ciclo.length];
   renderAsistencia();
 }
-function setAsist(id,dia,val,btn){
-  asistData[id][dia]=val;
+function setAsist(id, dia, val) {
+  if (!asistData[id]) asistData[id] = {};
+  asistData[id][dia] = val;
   renderAsistencia();
 }
-function markAll(v){alumnos.forEach(a=>asistData[a.id]['Hoy']=v);renderAsistencia();}
-function saveAsistencia(){
-  const btn=document.querySelector('#p-asistencia .btn-action');
-  const orig=btn.textContent;btn.textContent='✅ Guardado';
-  setTimeout(()=>btn.textContent=orig,2000);
+function markAll(v) {
+  alumnos.forEach(a => { if (!asistData[a.id]) asistData[a.id] = {}; asistData[a.id]['Hoy'] = v; });
+  renderAsistencia();
 }
- 
-// ═══════════════════════════════════
+
+async function saveAsistencia() {
+  const fecha    = document.getElementById('asist-date')?.value;
+  const registros = alumnos.map(a => ({ alumnoId: a.id, estado: asistData[a.id]?.['Hoy'] || 'P' }));
+  const btn      = document.querySelector('#p-asistencia .btn-action');
+  try {
+    await apiFetch('/asistencia', { method:'POST', body: JSON.stringify({ fecha, registros }) });
+    if (btn) { const t = btn.textContent; btn.textContent='✅ Guardado'; setTimeout(()=>btn.textContent=t,2000); }
+    mostrarToast('✅ Asistencia guardada correctamente');
+  } catch (err) { mostrarToast('❌ Error: ' + err.message); }
+}
+
+// ═══════════════════════════════════════════════════════
+//  OBSERVACIONES
+// ═══════════════════════════════════════════════════════
+async function cargarObservaciones() {
+  try {
+    observaciones = await apiFetch('/observaciones');
+    renderObs();
+  } catch { mostrarToast('⚠ Error al cargar observaciones'); }
+}
+
+function renderObs() {
+  const el = document.getElementById('obs-list');
+  if (!el) return;
+  el.innerHTML = observaciones.map(o => {
+    const color = o.tipo === 'positiva' ? 'oc-green' : o.tipo === 'negativa' ? 'oc-rose' : 'oc-amber';
+    const tags  = o.etiquetas ? o.etiquetas.split(',') : [];
+    return `<div class="obs-card ${color}">
+      <div class="obs-header">
+        <div class="obs-av">${(o.alumnoNombre||'?')[0]}</div>
+        <div><div class="obs-name">${o.alumnoNombre||'—'}</div><div class="obs-date">${o.fecha}</div></div>
+      </div>
+      <div class="obs-tags">${tags.map(t => {
+        const cl = t.includes('✅')||t.includes('⭐')||t.includes('🌟')?'ot-pos':t.includes('⚠')||t.includes('😔')?'ot-neg':'ot-neu';
+        return `<span class="obs-tag ${cl}">${t.trim()}</span>`;
+      }).join('')}</div>
+      <div class="obs-text">${o.descripcion}</div>
+      <div class="obs-footer">
+        <span style="font-size:.73rem;color:var(--muted);">📅 ${o.fecha}</span>
+        <button class="btn-icon" onclick="deleteObs(${o.id},this)">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+let selectedTags = [];
+function toggleTag(btn, type, cls) {
+  const classes = ['sel-pos','sel-neg','sel-neu'];
+  const active  = classes.some(c => btn.classList.contains(c));
+  if (active) { btn.classList.remove(...classes); selectedTags = selectedTags.filter(t => t !== btn.textContent.trim()); }
+  else        { btn.classList.remove(...classes); btn.classList.add(cls); selectedTags.push(btn.textContent.trim()); }
+}
+
+async function addObservacion() {
+  const alumnoId    = document.getElementById('obs-select-alumno').value;
+  const fecha       = document.getElementById('obs-fecha').value;
+  const descripcion = document.getElementById('obs-desc').value.trim();
+  if (!descripcion) return alert('Escribe una descripción.');
+  const hasNeg = selectedTags.some(t => t.includes('⚠')||t.includes('😔'));
+  const tipo   = hasNeg ? 'negativa' : selectedTags.length ? 'positiva' : 'neutral';
+  try {
+    await apiFetch('/observaciones', {
+      method: 'POST',
+      body:   JSON.stringify({ alumnoId, fecha, descripcion, tipo, etiquetas: selectedTags.join(',') }),
+    });
+    document.getElementById('obs-desc').value = '';
+    selectedTags = [];
+    document.querySelectorAll('.tag-toggle').forEach(b => b.classList.remove('sel-pos','sel-neg','sel-neu'));
+    mostrarToast('✅ Observación guardada');
+    await cargarObservaciones();
+  } catch (err) { mostrarToast('❌ ' + err.message); }
+}
+
+async function deleteObs(id, btn) {
+  const card = btn.closest('.obs-card');
+  card.style.transition='.3s'; card.style.opacity='0'; card.style.transform='scale(.95)';
+  try {
+    await apiFetch(`/observaciones/${id}`, { method:'DELETE' });
+    setTimeout(() => card.remove(), 300);
+    mostrarToast('🗑️ Eliminada');
+  } catch (err) { card.style.opacity='1'; card.style.transform=''; mostrarToast('❌ '+err.message); }
+}
+
+// ═══════════════════════════════════════════════════════
 //  AVISOS
-// ═══════════════════════════════════
-const avisoIcons=['📅','💰','📋','⚠'];
-const avisoWrap=['av-purple','av-amber','av-blue','av-blue'];
-function renderAvisos(){
-  document.getElementById('avisos-list').innerHTML = avisos.map((av,i)=>`
+// ═══════════════════════════════════════════════════════
+async function cargarAvisos() {
+  try {
+    avisos = await apiFetch('/avisos');
+    renderAvisos();
+  } catch { mostrarToast('⚠ Error al cargar avisos'); }
+}
+
+const avisoIcons = ['📅','💰','📋','⚠'];
+const avisoWrap  = ['av-purple','av-amber','av-blue','av-blue'];
+
+function renderAvisos() {
+  const el = document.getElementById('avisos-list');
+  if (!el) return;
+  el.innerHTML = avisos.map((av, i) => `
     <div class="aviso-card">
       <div class="aviso-icon-wrap ${avisoWrap[i%4]}">${avisoIcons[i%4]}</div>
       <div class="aviso-content">
         <div class="aviso-title">${av.titulo}</div>
-        <div class="aviso-body">${av.cuerpo}</div>
+        <div class="aviso-body">${av.contenido}</div>
         <div class="aviso-meta">
-          <span class="aviso-date">📅 ${av.fecha}</span>
-          <span class="aviso-chip ${av.chip}">${av.cat}</span>
+          <span class="aviso-date">📅 ${new Date(av.fecha).toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'})}</span>
+          <span class="aviso-chip ac-g">${av.categoria||''}</span>
         </div>
       </div>
-      <button class="btn-icon" style="align-self:flex-start;" onclick="this.closest('.aviso-card').remove()">🗑️</button>
+      <button class="btn-icon" style="align-self:flex-start;" onclick="deleteAviso(${av.id},this)">🗑️</button>
     </div>`).join('');
 }
-renderAvisos();
-function publishAviso(){
-  const titulo=document.getElementById('aviso-titulo').value.trim();
-  const cuerpo=document.getElementById('aviso-body').value.trim();
-  const cat=document.getElementById('aviso-cat').value;
-  if(!titulo||!cuerpo)return alert('Completa título y contenido.');
-  avisos.unshift({titulo,cuerpo,cat,fecha:new Date().toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'}),chip:'ac-g'});
-  document.getElementById('aviso-titulo').value='';
-  document.getElementById('aviso-body').value='';
-  renderAvisos();
+
+async function publishAviso() {
+  const titulo    = document.getElementById('aviso-titulo').value.trim();
+  const contenido = document.getElementById('aviso-body').value.trim();
+  const categoria = document.getElementById('aviso-cat').value;
+  if (!titulo||!contenido) return alert('Completa título y contenido.');
+  try {
+    await apiFetch('/avisos', { method:'POST', body: JSON.stringify({ titulo, contenido, categoria }) });
+    document.getElementById('aviso-titulo').value='';
+    document.getElementById('aviso-body').value='';
+    mostrarToast('📢 Aviso publicado');
+    await cargarAvisos();
+  } catch (err) { mostrarToast('❌ '+err.message); }
 }
- 
-// ═══════════════════════════════════
+
+async function deleteAviso(id, btn) {
+  try {
+    await apiFetch(`/avisos/${id}`, { method:'DELETE' });
+    btn.closest('.aviso-card').remove();
+    mostrarToast('🗑️ Aviso eliminado');
+  } catch (err) { mostrarToast('❌ '+err.message); }
+}
+
+// ═══════════════════════════════════════════════════════
 //  CHAT
-// ═══════════════════════════════════
-function renderContacts(){
-  document.getElementById('chat-contacts').innerHTML = chatConversaciones.map((c,i)=>`
+// ═══════════════════════════════════════════════════════
+async function cargarChatsDocente() {
+  try {
+    chatConversaciones = await apiFetch('/mensajes/conversaciones');
+    renderContacts();
+    if (chatConversaciones.length) await selectChat(0);
+  } catch { chatConversaciones = []; renderContacts(); }
+}
+
+function renderContacts() {
+  const el = document.getElementById('chat-contacts');
+  if (!el) return;
+  el.innerHTML = chatConversaciones.map((c,i) => `
     <div class="contact-item ${i===currentChat?'active':''}" onclick="selectChat(${i})">
-      <div class="contact-av ${c.av}">${c.initials}${c.online?'<div class="online-dot"></div>':''}</div>
+      <div class="contact-av ${c.av||'av2'}">${c.initials||c.nombre?.[0]||'?'}</div>
       <div class="contact-info">
         <div class="contact-name">${c.nombre}</div>
-        <div class="contact-preview">${c.preview}</div>
+        <div class="contact-preview">${c.ultimoMensaje||''}</div>
       </div>
       <div class="contact-meta">
-        <div class="contact-time">${c.hora}</div>
-        ${c.unread?`<div class="unread-badge">${c.unread}</div>`:''}
+        <div class="contact-time">${c.hora||''}</div>
+        ${c.noLeidos?`<div class="unread-badge">${c.noLeidos}</div>`:''}
       </div>
     </div>`).join('');
 }
-function renderMessages(){
-  const conv = chatConversaciones[currentChat];
-  document.getElementById('chat-messages').innerHTML = conv.msgs.map(m=>`
-    <div class="msg ${m.mine?'mine':''}">
-      <div class="msg-av ${m.mine?'mine-av':conv.av}">${m.mine?'ML':conv.initials}</div>
-      <div>
-        <div class="bubble">${m.text}</div>
-        <div class="msg-time">${m.hora}</div>
-      </div>
-    </div>`).join('');
-  const ms=document.getElementById('chat-messages');
-  ms.scrollTop=ms.scrollHeight;
-}
-function selectChat(i){
-  currentChat=i;
-  chatConversaciones[i].unread=0;
-  const c=chatConversaciones[i];
-  document.getElementById('chat-header').innerHTML=`
-    <div class="contact-av ${c.av}">${c.initials}</div>
+
+async function selectChat(i) {
+  currentChat = i;
+  const c = chatConversaciones[i];
+  const hdr = document.getElementById('chat-header');
+  if (hdr) hdr.innerHTML = `
+    <div class="contact-av ${c.av||'av2'}">${c.initials||c.nombre?.[0]}</div>
     <div class="chat-header-info">
       <div class="chat-header-name">${c.nombre}</div>
-      <div class="chat-header-sub">Alumno/a de 3°B</div>
+      <div class="chat-header-sub">Padre/Tutor · 3°B</div>
     </div>`;
-  renderContacts();renderMessages();
+  try {
+    c.msgs = await apiFetch(`/mensajes/${c.usuarioId}`);
+  } catch { c.msgs = []; }
+  renderMessages(); renderContacts();
 }
-function sendMsg(){
-  const inp=document.getElementById('chat-input');
-  const txt=inp.value.trim();
-  if(!txt)return;
-  const now=new Date();
-  const hora=now.getHours()+':'+String(now.getMinutes()).padStart(2,'0');
-  chatConversaciones[currentChat].msgs.push({mine:true,text:txt,hora});
-  chatConversaciones[currentChat].preview=txt;
-  inp.value='';
-  renderMessages();renderContacts();
+
+function renderMessages() {
+  const conv = chatConversaciones[currentChat];
+  if (!conv) return;
+  const el = document.getElementById('chat-messages');
+  if (!el) return;
+  el.innerHTML = (conv.msgs||[]).map(m => {
+    const isMine = m.mine || false;
+    return `<div class="msg ${isMine?'mine':''}">
+      <div class="msg-av ${isMine?'mine-av':conv.av||'av2'}">${isMine?'ML':conv.initials||'?'}</div>
+      <div>
+        <div class="bubble">${m.contenido||m.text||''}</div>
+        <div class="msg-time">${m.hora||''}</div>
+      </div>
+    </div>`;
+  }).join('');
+  el.scrollTop = el.scrollHeight;
 }
-renderContacts();renderMessages();
- 
-// ═══════════════════════════════════
+
+async function sendMsg() {
+  const inp  = document.getElementById('chat-input');
+  const txt  = inp?.value.trim();
+  if (!txt) return;
+  const conv = chatConversaciones[currentChat];
+  if (!conv) return;
+  try {
+    await apiFetch('/mensajes', {
+      method: 'POST',
+      body:   JSON.stringify({ receptorId: conv.usuarioId, contenido: txt }),
+    });
+    const hora = new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+    if (!conv.msgs) conv.msgs = [];
+    conv.msgs.push({ mine:true, contenido:txt, hora });
+    conv.ultimoMensaje = txt;
+    inp.value = '';
+    renderMessages(); renderContacts();
+  } catch (err) { mostrarToast('❌ '+err.message); }
+}
+
+// ═══════════════════════════════════════════════════════
 //  CITAS
-// ═══════════════════════════════════
-function renderCitas(){
-  document.getElementById('citas-list').innerHTML = citas.length
-    ? citas.map(c=>`
-      <div class="cita-item">
-        <div class="cita-time-block"><div class="cita-hour">${c.hora}</div><div class="cita-ampm">${c.ampm}</div></div>
-        <div class="cita-info">
-          <div class="cita-name">${c.nombre}</div>
-          <div class="cita-reason">👤 ${c.alumno} — ${c.motivo}</div>
-          <span class="cita-status ${c.status==='Confirmada'?'cs-conf':'cs-pend'}">${c.status}</span>
-        </div>
-        <button class="btn-icon" onclick="this.closest('.cita-item').remove()">🗑️</button>
-      </div>`).join('')
-    : '<p style="color:var(--muted);font-size:.86rem;text-align:center;padding:2rem;">Sin citas programadas hoy</p>';
+// ═══════════════════════════════════════════════════════
+async function cargarCitas() {
+  try {
+    citas = await apiFetch('/citas');
+    renderCitas(); renderCal();
+  } catch { mostrarToast('⚠ Error al cargar citas'); }
 }
-renderCitas();
- 
-// Calendario
-let calYear=2026, calMonth=2; // marzo
-function renderCal(){
-  const monthNames=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  document.getElementById('cal-month-label').textContent=`${monthNames[calMonth]} ${calYear}`;
-  const g=document.getElementById('cal-grid');
-  g.innerHTML=['Do','Lu','Ma','Mi','Ju','Vi','Sa'].map(d=>`<div class="cal-day-name">${d}</div>`).join('');
-  const first=new Date(calYear,calMonth,1).getDay();
-  const days=new Date(calYear,calMonth+1,0).getDate();
-  for(let i=0;i<first;i++) g.innerHTML+=`<div class="cal-day empty"></div>`;
-  for(let d=1;d<=days;d++){
-    const isToday=d===15&&calMonth===2&&calYear===2026;
-    const hasCita=d===15||d===20;
-    g.innerHTML+=`<div class="cal-day${isToday?' today':''}${hasCita?' has-cita':''}">${d}</div>`;
+
+function renderCitas() {
+  const el = document.getElementById('citas-list');
+  if (!el) return;
+  el.innerHTML = citas.length
+    ? citas.map(c => `
+      <div class="cita-item">
+        <div class="cita-time-block">
+          <div class="cita-hour">${String(c.hora||'').substring(0,5)}</div>
+          <div class="cita-ampm">—</div>
+        </div>
+        <div class="cita-info">
+          <div class="cita-name">${c.tutorNombre||'Tutor'}</div>
+          <div class="cita-reason">🧒 ${c.alumnoNombre||''} — ${c.motivo||''}</div>
+          <span class="cita-status ${c.estado==='confirmada'?'cs-conf':'cs-pend'}">
+            ${c.estado==='confirmada'?'✅ Confirmada':'⏳ Pendiente'}
+          </span>
+        </div>
+        <button class="btn-icon" onclick="confirmarCita(${c.id},this)" title="Confirmar">✅</button>
+        <button class="btn-icon" onclick="eliminarCita(${c.id},this)" title="Eliminar">🗑️</button>
+      </div>`).join('')
+    : '<p style="color:var(--muted);font-size:.86rem;text-align:center;padding:2rem;">Sin citas hoy</p>';
+}
+
+async function confirmarCita(id) {
+  try { await apiFetch(`/citas/${id}/confirmar`, { method:'PUT' }); mostrarToast('✅ Cita confirmada'); await cargarCitas(); }
+  catch (err) { mostrarToast('❌ '+err.message); }
+}
+async function eliminarCita(id, btn) {
+  try { await apiFetch(`/citas/${id}`, { method:'DELETE' }); btn.closest('.cita-item').remove(); mostrarToast('🗑️ Eliminada'); }
+  catch (err) { mostrarToast('❌ '+err.message); }
+}
+
+async function saveCita() {
+  const alumnoId = document.getElementById('nc-alumno-select').value;
+  const fecha    = document.getElementById('nc-fecha').value;
+  const hora     = document.getElementById('nc-hora').value;
+  const motivo   = document.getElementById('nc-motivo').value.trim();
+  if (!fecha||!hora) return alert('Completa los campos requeridos.');
+  try {
+    await apiFetch('/citas', { method:'POST', body: JSON.stringify({ alumnoId, fecha, hora, motivo }) });
+    closeOverlay('modal-cita'); mostrarToast('📅 Cita agendada'); await cargarCitas();
+  } catch (err) { mostrarToast('❌ '+err.message); }
+}
+
+// ── Calendario
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+
+function renderCal() {
+  const names = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const lbl = document.getElementById('cal-month-label');
+  if (lbl) lbl.textContent = `${names[calMonth]} ${calYear}`;
+  const g = document.getElementById('cal-grid');
+  if (!g) return;
+  g.innerHTML = ['Do','Lu','Ma','Mi','Ju','Vi','Sa'].map(d=>`<div class="cal-day-name">${d}</div>`).join('');
+  const first = new Date(calYear, calMonth, 1).getDay();
+  const days  = new Date(calYear, calMonth+1, 0).getDate();
+  const citasDias = citas.map(c => new Date(c.fecha+'T12:00').getDate());
+  for (let i=0; i<first; i++) g.innerHTML += `<div class="cal-day empty"></div>`;
+  const today = new Date();
+  for (let d=1; d<=days; d++) {
+    const isToday = d===today.getDate() && calMonth===today.getMonth() && calYear===today.getFullYear();
+    const hasCita = citasDias.includes(d);
+    g.innerHTML += `<div class="cal-day${isToday?' today':''}${hasCita?' has-cita':''}">${d}</div>`;
   }
 }
-renderCal();
-function changeMonth(dir){calMonth+=dir;if(calMonth>11){calMonth=0;calYear++;}if(calMonth<0){calMonth=11;calYear--;}renderCal();}
-function addSlot(){
-  const f=document.getElementById('new-cita-fecha').value;
-  const h=document.getElementById('new-cita-hora').value;
-  if(!f||!h)return alert('Selecciona fecha y hora.');
-  alert(`✅ Horario ${h} del ${new Date(f+'T12:00').toLocaleDateString('es-MX')} habilitado.`);
+function changeMonth(dir) {
+  calMonth += dir;
+  if (calMonth > 11) { calMonth=0; calYear++; }
+  if (calMonth < 0)  { calMonth=11; calYear--; }
+  renderCal();
 }
-function saveCita(){
-  const padre=document.getElementById('nc-padre').value.trim();
-  const alumno=document.getElementById('nc-alumno-select').value;
-  const hora=document.getElementById('nc-hora').value;
-  const motivo=document.getElementById('nc-motivo').value.trim();
-  if(!padre||!hora)return alert('Completa los campos requeridos.');
-  const [h,m]=hora.split(':');
-  const ampm=parseInt(h)>=12?'PM':'AM';
-  const h12=String(parseInt(h)%12||12)+':'+m;
-  citas.push({hora:h12,ampm,nombre:padre,alumno,motivo:motivo||'Sin especificar',status:'Confirmada'});
-  closeOverlay('modal-cita');
-  renderCitas();
+function addSlot() {
+  const f = document.getElementById('new-cita-fecha')?.value;
+  const h = document.getElementById('new-cita-hora')?.value;
+  if (!f||!h) return alert('Selecciona fecha y hora.');
+  mostrarToast(`✅ Horario ${h} habilitado`);
 }
- 
-// ═══════════════════════════════════
-//  ASEO
-// ═══════════════════════════════════
-function shuffleAseo(){
-  const shuffled=[...alumnos].sort(()=>Math.random()-.5);
-  aseoRol={};
-  diasSemana.forEach((d,i)=>{
-    aseoRol[d]=aseoActividades.map((act,j)=>({act,alumno:shuffled[(i*5+j)%shuffled.length].nombre}));
+
+// ═══════════════════════════════════════════════════════
+//  ASEO — solo frontend
+// ═══════════════════════════════════════════════════════
+function shuffleAseo() {
+  const shuffled = [...alumnos].sort(() => Math.random()-.5);
+  aseoRol = {};
+  diasSemana.forEach((d,i) => {
+    aseoRol[d] = aseoActividades.map((act,j) => ({
+      act, alumno: shuffled[(i*5+j) % (shuffled.length||1)]?.nombre || '—'
+    }));
   });
   renderAseo();
 }
-function renderAseo(){
-  document.getElementById('aseo-grid').innerHTML=diasSemana.map(d=>`
+function renderAseo() {
+  const el = document.getElementById('aseo-grid');
+  if (!el) return;
+  el.innerHTML = diasSemana.map(d => `
     <div class="aseo-day-card">
-      <div class="aseo-day-title">${d}</div>
-      ${(aseoRol[d]||[]).map((r,i)=>`
+      <div class="aseo-day-title">📅 ${d}</div>
+      ${(aseoRol[d]||[]).map((r,i) => `
         <div class="aseo-student-row">
-          <div class="aseo-dot" style="background:${['var(--teal)','var(--accent)','var(--rose)','#7b61ff','var(--deep)'][i]};"></div>
-          <div><div style="font-size:.82rem;font-weight:600;">${r.alumno.split(' ')[0]}</div><div style="font-size:.72rem;color:var(--muted);">${r.act}</div></div>
+          <div class="aseo-dot" style="background:${['#5cbf99','#f5965a','#f07090','#9b7ee8','#60b8f0'][i]};"></div>
+          <div>
+            <div style="font-size:.82rem;font-weight:800;">${r.alumno.split(' ')[0]}</div>
+            <div style="font-size:.72rem;color:var(--muted);font-weight:700;">${r.act}</div>
+          </div>
           <span class="aseo-num">${i+1}</span>
         </div>`).join('')}
     </div>`).join('');
 }
-shuffleAseo();
- 
-// ═══════════════════════════════════
+
+// ═══════════════════════════════════════════════════════
 //  MODALS / OVERLAYS
-// ═══════════════════════════════════
-function openAddAlumno(){document.getElementById('modal-alumno').classList.add('open');}
-function openAddTarea(){document.getElementById('modal-tarea').classList.add('open');}
-function openAddCita(){
-  // populate select
-  const s=document.getElementById('nc-alumno-select');
-  s.innerHTML=alumnos.map(a=>`<option>${a.nombre}</option>`).join('');
-  document.getElementById('modal-cita').classList.add('open');
+// ═══════════════════════════════════════════════════════
+function openAddAlumno() { document.getElementById('modal-alumno')?.classList.add('open'); }
+function openAddTarea()   { document.getElementById('modal-tarea')?.classList.add('open'); }
+function openAddCita()    { poblarSelectAlumnos(); document.getElementById('modal-cita')?.classList.add('open'); }
+function closeOverlay(id) { document.getElementById(id)?.classList.remove('open'); }
+
+document.querySelectorAll('.overlay').forEach(o =>
+  o.addEventListener('click', e => { if (e.target===o) o.classList.remove('open'); })
+);
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape')
+    document.querySelectorAll('.overlay.open').forEach(o => o.classList.remove('open'));
+});
+
+// ═══════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════
+function mostrarToast(msg) {
+  let t = document.getElementById('app-toast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'app-toast';
+    t.style.cssText = [
+      'position:fixed','bottom:2rem','right:2rem','z-index:9999',
+      'background:linear-gradient(135deg,#5cbf99,#9b7ee8)',
+      'color:white','font-family:Nunito,sans-serif','font-size:.88rem','font-weight:800',
+      'padding:.75rem 1.4rem','border-radius:99px',
+      'box-shadow:0 8px 28px rgba(155,127,232,.3)',
+      'transition:opacity .3s,transform .3s',
+    ].join(';');
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity='1'; t.style.transform='translateY(0)';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.style.opacity='0'; t.style.transform='translateY(10px)'; }, 3000);
 }
-function closeOverlay(id){document.getElementById(id).classList.remove('open');}
-document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
-document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.overlay.open').forEach(o=>o.classList.remove('open'));});
- 
-function saveAlumno(){
-  const nombre=document.getElementById('new-alumno-nombre').value.trim();
-  const fecha=document.getElementById('new-alumno-fecha').value;
-  if(!nombre||!fecha)return alert('Completa nombre y fecha.');
-  alumnos.push({id:alumnos.length+1,nombre,fecha,prom:0,asist:0,estado:'Nuevo'});
-  renderAlumnos(alumnos);
-  closeOverlay('modal-alumno');
+
+//ALUMNO
+// Inicialización del panel de alumno
+document.addEventListener('DOMContentLoaded', () => {
+
+  const pagina = window.location.pathname;
+
+  // SOLO ejecutar en alumno.html
+  if (pagina.includes('alumno.html')) {
+
+    const rol = localStorage.getItem('rol');
+
+    if (!rol || rol !== 'padre') {
+      window.location.href = 'index.html';
+      return;
+    }
+
+    iniciarPanelAlumno();
+  }
+
+});
+
+// Datos del alumno (desde login)
+let alumnoActual = {
+  id: parseInt(localStorage.getItem('alumnoId')) || 0,
+  nombre: localStorage.getItem('alumno') || 'Alumno',
+  tutor: localStorage.getItem('tutor') || 'Tutor',
+  grupo: '3°B'
+};
+
+let calificacionesAlumno = [];
+let asistenciaAlumno = [];
+
+async function iniciarPanelAlumno() {
+  const nb = document.querySelector('.student-name-sb');
+  if (nb) nb.textContent = alumnoActual.nombre;
+  
+  const gb = document.querySelector('.student-group-sb');
+  if (gb) gb.textContent = 'Grupo ' + alumnoActual.grupo;
+  
+  const fb = document.querySelector('.footer-text');
+  if (fb) fb.textContent = alumnoActual.tutor;
+  
+  // Cargar datos dinámicamente
+  await Promise.all([
+    cargarCalificacionesAlumno(),
+    cargarAsistenciaAlumno()
+  ]);
+  
+  setFechaHoy();
 }
+
+async function cargarCalificacionesAlumno() {
+  try {
+    calificacionesAlumno = await apiFetch(`/calificaciones/${alumnoActual.id}`);
+    renderCalificacionesAlumno();
+  } catch (err) {
+    console.error('Error cargando calificaciones:', err);
+    calificacionesAlumno = [];
+  }
+}
+
+function renderCalificacionesAlumno() {
+  const tbody = document.getElementById('tareas-tbody');
+  if (!tbody) return;
+  
+  if (!calificacionesAlumno || calificacionesAlumno.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1.5rem;">No hay calificaciones registradas</td></tr>';
+    return;
+  }
+  
+  tbody.innerHTML = calificacionesAlumno.map(c => {
+    const estado = c.nota ? 'ec-ok' : 'ec-pend';
+    const notaText = c.nota ? parseFloat(c.nota).toFixed(1) : '—';
+    return `<tr>
+      <td style="font-weight:700;color:var(--text);">${c.actividad || 'Actividad'}</td>
+      <td style="color:var(--muted);font-size:.88rem;">${c.materia || '—'}</td>
+      <td style="color:var(--muted);font-size:.88rem;">${c.fecha || '—'}</td>
+      <td><span style="background:var(--mint-l);color:var(--mint-d);padding:.25rem .7rem;border-radius:10px;font-weight:700;font-size:.8rem;">${notaText}</span></td>
+      <td><span class="entrega-chip ${estado}">${c.nota ? '✓ Calificado' : '⏳ Pendiente'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+async function cargarAsistenciaAlumno() {
+  try {
+    asistenciaAlumno = await apiFetch(`/asistencia/${alumnoActual.id}`);
+    renderAsistenciaAlumno();
+  } catch (err) {
+    console.error('Error cargando asistencia:', err);
+    asistenciaAlumno = [];
+  }
+}
+
+function renderAsistenciaAlumno() {
+  const grid = document.getElementById('mes-grid');
+  if (!grid) return;
+  
+  grid.innerHTML = '';
+  const days = ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'];
+  
+  // Headers de días
+  days.forEach(d => {
+    const div = document.createElement('div');
+    div.className = 'mes-day-name';
+    div.textContent = d;
+    grid.appendChild(div);
+  });
+  
+  // Días del mes (marzo)
+  const d = new Date();
+  const first = new Date(d.getFullYear(), d.getMonth(), 1).getDay();
+  const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  
+  for (let i = 0; i < first; i++) {
+    const div = document.createElement('div');
+    div.className = 'mes-day md-e';
+    grid.appendChild(div);
+  }
+  
+  // Búsqueda de estado en asistencia
+  const estadoMap = {};
+  asistenciaAlumno.forEach(a => {
+    const fecha = new Date(a.fecha);
+    const día = fecha.getDate();
+    estadoMap[día] = a.estado;
+  });
+  
+  for (let día = 1; día <= daysInMonth; día++) {
+    const div = document.createElement('div');
+    const estado = (estadoMap[día] || 'p').toLowerCase();
+    let className = 'mes-day';
+    let label = día;
+    
+    if (estado === 'p') {
+      className += ' md-p';
+      label = 'P';
+    } else if (estado === 'f') {
+      className += ' md-f';
+      label = 'F';
+    } else if (estado === 'j') {
+      className += ' md-j';
+      label = 'J';
+    } else {
+      className += ' md-e';
+    }
+    
+    div.className = className;
+    div.textContent = label;
+    grid.appendChild(div);
+  }
+}
+
+function setFechaHoy() {
+  const d = new Date();
+  const str = d.toLocaleDateString('es-MX', { 
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+  });
+  
+  const td = document.getElementById('today-date');
+  if (td) td.textContent = str;
+}
+
+function goTo(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  
+  const pageEl = document.getElementById('p-' + page);
+  if (pageEl) pageEl.classList.add('active');
+  if (el) el.classList.add('active');
+  
+  const titles = {
+    home: '¡Hola, ' + (alumnoActual.nombre.split(' ')[0] || 'Alumn@') + '! 👋',
+    alumnos: 'Gestión de Alumnos 🎒',
+    calificaciones: 'Mis Calificaciones ⭐',
+    observaciones: 'Observaciones 📋',
+    asistencia: 'Mi Asistencia ✅',
+    avisos: 'Avisos 📢',
+    chat: 'Mensajes 💬',
+    citas: 'Agenda de Citas 🗓️',
+    aseo: 'Rol de Aseo 🧹'
+  };
+  
+  const titleEl = document.getElementById('page-title');
+  if (titleEl) titleEl.textContent = titles[page] || page;
+  
+  const subEl = document.getElementById('page-sub');
+  if (subEl) {
+    const subs = {
+      home: 'Bienvenid@ a tu espacio escolar',
+      calificaciones: 'Ciclo escolar 2025-2026',
+      asistencia: 'Ciclo escolar 2025-2026',
+      avisos: 'Comunicados del grupo ' + alumnoActual.grupo,
+      chat: 'Conversación con tu maestro',
+      citas: 'Grupo ' + alumnoActual.grupo + ' · Mtro. Hector'
+    };
+    subEl.textContent = subs[page] || '';
+  }
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  if (toast) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3000);
+  }
+}
+
+// Logout
+function logout() {
+  Swal.fire({
+    title: '¿Cerrar sesión?',
+    text: '¿Seguro que deseas salir de tu cuenta?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#5cbf99',
+    cancelButtonColor: '#f07090',
+    confirmButtonText: 'Sí, salir',
+    cancelButtonText: 'Cancelar',
+    background: '#fff',
+    backdrop: true
+  }).then((result) => {
+    if (result.isConfirmed) {
+      localStorage.clear();
+      Swal.fire({
+        title: '¡Hasta luego!',
+        text: 'Sesión cerrada correctamente',
+        icon: 'success',
+        timer: 1500,
+        showConfirmButton: false
+      });
+      setTimeout(() => {
+        window.location.href = 'index.html';
+      }, 1500);
+    }
+  });
+}
+

@@ -1,179 +1,110 @@
-const bcrypt = require("bcryptjs");
+const bcrypt        = require("bcryptjs");
+const jwt           = require("jsonwebtoken");
 const usuarioModelo = require("../Modelo/usuarioModelo");
-const jwt = require("jsonwebtoken");
 
+// ── Registro (docente, solo setup inicial)
 async function registrarUsuario(req, res) {
-    try {
-        const { nombreCompleto, nombreUsuario, pais, contrasena, palabra, correo} = req.body;
+  try {
+    const { nombreCompleto, nombreUsuario, contrasena, rol = "docente", correo } = req.body;
+    if (!nombreCompleto || !nombreUsuario || !contrasena)
+      return res.status(400).json({ mensaje: "Faltan datos obligatorios" });
 
-        if (!nombreCompleto || !nombreUsuario || !pais || !contrasena || !palabra || !correo) {
-            return res.status(400).json({ mensaje: "Faltan datos obligatorios" });
-        }
+    const existe = await usuarioModelo.getUsuarioPorNombre(nombreUsuario);
+    if (existe)
+      return res.status(409).json({ mensaje: "El nombre de usuario ya existe" });
 
-        const existe = await usuarioModelo.getUsuarioPorNombre(nombreUsuario);
-
-        if (existe) {
-            return res.status(409).json({ mensaje: "El nombre de usuario ya existe" });
-        }
-
-        const contra = await bcrypt.hash(contrasena, 10);
-
-        const nuevoId = await usuarioModelo.crearUsuario(
-            nombreCompleto,
-            nombreUsuario,
-            pais,
-            contra,
-            palabra,
-            correo
-        );
-
-        res.status(201).json({
-            mensaje: "Usuario registrado correctamente",
-            usuarioId: nuevoId
-        });
-
-    } catch (error) {
-        console.error("Error al registrar usuario:", error);
-        res.status(500).json({ mensaje: "Error en el servidor" });
-    }
+    const hash = await bcrypt.hash(contrasena, 10);
+    const id   = await usuarioModelo.crearUsuario(nombreCompleto, nombreUsuario, hash, rol, correo);
+    res.status(201).json({ mensaje: "Usuario registrado correctamente", id });
+  } catch (error) {
+    console.error("Error al registrar:", error);
+    res.status(500).json({ mensaje: "Error en el servidor" });
+  }
 }
 
+// ── Login Docente (usuario + contraseña)
+async function loginDocente(req, res) {
+  try {
+    const { nombreUsuario, contrasena } = req.body;
+    if (!nombreUsuario || !contrasena)
+      return res.status(400).json({ mensaje: "Faltan datos obligatorios" });
 
-async function loginUsuario(req, res) {
-    try {
-        const { nombreUsuario, contrasena } = req.body;
+    const usuario = await usuarioModelo.getUsuarioPorNombre(nombreUsuario);
+    if (!usuario)
+      return res.status(404).json({ mensaje: "Usuario no encontrado" });
 
-        if (!nombreUsuario || !contrasena) {
-            return res.status(400).json({ mensaje: "Faltan datos obligatorios" });
-        }
+    if (usuario.bloqueadoHasta && new Date(usuario.bloqueadoHasta) > new Date())
+      return res.status(403).json({ mensaje: "Cuenta bloqueada. Intenta más tarde." });
 
-        const usuario = await usuarioModelo.getUsuarioPorNombre(nombreUsuario);
-
-        if (!usuario) {
-            return res.status(404).json({ mensaje: "Usuario no encontrado" });
-        }
-
-        // si esta bloqueado
-        if (usuario.bloqueadoHasta && new Date(usuario.bloqueadoHasta) > new Date()) {
-            return res.status(403).json({
-                mensaje: "Cuenta bloqueada temporalmente. Intenta más tarde."
-            });
-        }
-
-        //Validar contraseña
-        const valida = await bcrypt.compare(contrasena, usuario.contrasena);
-
-        if (!valida) {
-            await usuarioModelo.aumentarIntentoFallido(usuario.id);
-
-            // Si llega a 3,  bloquear por 5 minutos
-            if (usuario.intentosFallidos + 1 >= 3) {
-                await usuarioModelo.bloquearCuenta(usuario.id);
-                return res.status(403).json({
-                    mensaje: "Demasiados intentos fallidos. Cuenta bloqueada 5 minutos."
-                });
-            }
-
-            return res.status(401).json({ mensaje: "Contraseña incorrecta" });
-        }
-
-        //Si la contraseña es correcta, reset intentos
-        await usuarioModelo.reiniciarIntentos(usuario.id);
-
-        //Crear token
-        const token = jwt.sign(
-            {
-                id: usuario.id,
-                nombreCompleto: usuario.nombreCompleto,
-                nombreUsuario: usuario.nombreUsuario,
-                rol: usuario.rol
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: "3h" }
-        );
-
-        console.log(`[LOGIN] Usuario "${usuario.nombreUsuario}" inició sesión. Token: ${token}`);
-
-        return res.json({
-            mensaje: "Login correcto",
-            token,
-            id: usuario.id,
-            nombreUsuario: usuario.nombreUsuario,
-            nombreCompleto: usuario.nombreCompleto,
-            rol: usuario.rol
-        });
-
-    } catch (error) {
-        console.error("Error en login:", error);
-        return res.status(500).json({ mensaje: "Error en servidor" });
+    const valida = await bcrypt.compare(contrasena, usuario.contrasena);
+    if (!valida) {
+      await usuarioModelo.aumentarIntentoFallido(usuario.id);
+      if (usuario.intentosFallidos + 1 >= 3) {
+        await usuarioModelo.bloquearCuenta(usuario.id);
+        return res.status(403).json({ mensaje: "Cuenta bloqueada 5 minutos por intentos fallidos." });
+      }
+      return res.status(401).json({ mensaje: "Contraseña incorrecta" });
     }
+
+    await usuarioModelo.reiniciarIntentos(usuario.id);
+
+    const token = jwt.sign(
+      { id: usuario.id, nombreCompleto: usuario.nombreCompleto, rol: usuario.rol },
+      process.env.JWT_SECRET,
+      { expiresIn: "8h" }
+    );
+
+    console.log(`[LOGIN-DOCENTE] ${usuario.nombreUsuario}`);
+    res.json({ 
+      mensaje: "Login correcto", 
+      token, 
+      rol: usuario.rol, 
+      nombre: usuario.nombreCompleto,
+      userId: usuario.id
+    });
+
+  } catch (error) {
+    console.error("Error en loginDocente:", error);
+    res.status(500).json({ mensaje: "Error en el servidor" });
+  }
 }
 
-const updateProducto = async(req, res) => {
-    try{
-        const {id} = req.params;
-        const {disponibilidad, ventas} = req.body;
-        const filas = await productoModelo.updateDisponibilidadYventas(id, disponibilidad, ventas);
-        if(filas === 0)
-            return res.status(404).json({mensaje: 'Producto no encontrado'});
-        res.json({mensaje: 'Producto actualizado correctamente'});
-    }catch(error){
-        console.error('Error al actualizar el producto: ', error);
-        res.status(500).json({mensaje: 'Error al actualizar el producto'});
-    }
-};
+// ── Login Padre (nombre alumno + fecha nacimiento)
+async function loginPadre(req, res) {
+  try {
+    const { nombre, fechaNac } = req.body;
+    if (!nombre || !fechaNac)
+      return res.status(400).json({ mensaje: "Faltan datos obligatorios" });
 
-async function recuperarContrasena(req, res) {
-    try {
-        const { nombreUsuario, respuestaSeguridad, nuevaContrasena } = req.body;
+    const resultado = await usuarioModelo.getUsuarioPorAlumno(nombre, fechaNac);
+    if (!resultado)
+      return res.status(404).json({ mensaje: "Alumno no encontrado" });
 
-        if (!nombreUsuario || !respuestaSeguridad || !nuevaContrasena) {
-            return res.status(400).json({ mensaje: "Faltan datos obligatorios" });
-        }
+    const token = jwt.sign(
+      { id: resultado.id, rol: "padre", alumnoId: resultado.alumnoId },
+      process.env.JWT_SECRET,
+      { expiresIn: "8h" }
+    );
 
-        const usuario = await usuarioModelo.getUsuarioPorNombre(nombreUsuario);
+    console.log(`[LOGIN-PADRE] Tutor de ${resultado.alumnoNombre}`);
+    res.json({
+      mensaje: "Login correcto",
+      token,
+      rol:      "padre",
+      alumno:   resultado.alumnoNombre,
+      alumnoId: resultado.alumnoId,
+      tutor:    resultado.nombreCompleto,
+    });
 
-        if (!usuario) {
-            return res.status(404).json({ mensaje: "Usuario no encontrado" });
-        }
-
-        // Verificar respuesta de seguridad
-        if (usuario.palabra !== respuestaSeguridad) {
-            return res.status(400).json({ mensaje: "Respuesta de seguridad incorrecta" });
-        }
-
-        // Encriptar nueva contraseña
-        const contra = await bcrypt.hash(nuevaContrasena, 10);
-
-        // Actualizar contraseña
-        const filas = await usuarioModelo.updateContrasena(usuario.id, contra);
-        
-        if (filas === 0)
-            return res.status(404).json({ mensaje: 'Usuario no encontrado' });
-
-        res.json({ mensaje: 'Contraseña restablecida correctamente' });
-
-    } catch (error) {
-        console.error('Error al recuperar contraseña:', error);
-        res.status(500).json({ mensaje: 'Error al recuperar contraseña' });
-    }
+  } catch (error) {
+    console.error("Error en loginPadre:", error);
+    res.status(500).json({ mensaje: "Error en el servidor" });
+  }
 }
 
 async function logoutUsuario(req, res) {
-    try {
-        console.log(`[LOGOUT] Usuario cerró sesión:`, req.usuario);
-
-        return res.json({ mensaje: "Logout exitoso" });
-
-    } catch (error) {
-        console.error("[LOGOUT] Error:", error);
-        res.status(500).json({ mensaje: "Error en logout" });
-    }
+  console.log(`[LOGOUT]`, req.usuario);
+  res.json({ mensaje: "Logout exitoso" });
 }
 
-module.exports = {
-    registrarUsuario,
-    loginUsuario,
-    logoutUsuario,
-    recuperarContrasena
-};
+module.exports = { registrarUsuario, loginDocente, loginPadre, logoutUsuario };

@@ -4,8 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mi Aula Digital — Panel Docente</title>
-<link rel="icon" type="image/png" href="/frontend/logo.png">
+<link rel="icon" type="image/png" href="logo.png">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- SweetAlert CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<!-- SweetAlert JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -22,7 +26,7 @@
   </div>
  
   <div class="nav-section-label">Principal</div>
-  <div class="nav-item active" onclick="goTo('dashboard',this)">
+  <div class="nav-item active" onclick="goTo('Inicio',this)">
     <span class="nav-icon">🏠</span> Inicio
   </div>
   <div class="nav-item" onclick="goTo('alumnos',this)">
@@ -63,7 +67,7 @@
         <div class="teacher-name">Profesor. Hector</div>
         <div class="teacher-role">3°B · Primaria</div>
       </div>
-      <button class="btn-logout" title="Cerrar sesión">⏻</button>
+      <button class="btn-logout" title="Cerrar sesión" onclick="logout()">⏻</button>
     </div>
   </div>
 </aside>
@@ -84,7 +88,7 @@
   </div>
  
   <!-- ══ DASHBOARD ══ -->
-  <div class="page active" id="p-dashboard">
+  <div class="page active" id="p-Inicio">
     <div class="kpi-grid">
       <div class="kpi-card kc1">
         <div class="kpi-icon">👥</div>

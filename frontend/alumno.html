@@ -4,8 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mi Aula Digital — Panel Alumno</title>
-<link rel="icon" type="image/png" href="/frontend/logo.png">
+<link rel="icon" type="image/png" href="logo.png">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
+<!-- SweetAlert CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<!-- SweetAlert JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <style>
 /* ══════════════════════════════════════
    PALETA PASTEL INFANTIL
@@ -632,12 +636,12 @@ textarea.form-control{resize:vertical;min-height:75px;}
    SIDEBAR
 ══════════════════════════════════════ -->
 <aside class="sidebar">
-  <div class="student-banner">
-    <div class="student-avatar-big">🧒</div>
-    <div class="student-name-sb" id="sb-nombre">Sofía García López</div>
-    <div class="student-group-sb">Grupo 3°B · Primaria</div>
-    <div class="student-badge">🌟 Ciclo 2025-2026</div>
-  </div>
+    <div class="student-banner">
+      <div class="student-avatar-big">🧒</div>
+      <div class="student-name-sb" id="sb-nombre">Cargando...</div>
+      <div class="student-group-sb" id="sb-grupo">Cargando...</div>
+      <div class="student-badge" id="sb-ciclo">🌟 Ciclo 2025-2026</div>
+    </div>
 
   <div class="nav-section-label">Mi Escuela</div>
   <div class="nav-item active" onclick="goTo('home',this)">
@@ -667,10 +671,10 @@ textarea.form-control{resize:vertical;min-height:75px;}
     <div class="footer-info">
       <div class="footer-icon">👨‍👩‍👧</div>
       <div>
-        <div class="footer-text" id="sb-tutor">Mamá de Sofía</div>
+        <div class="footer-text" id="sb-tutor">Cargando...</div>
         <div class="footer-sub">Tutor registrado</div>
       </div>
-      <button class="btn-logout" title="Cerrar sesión" onclick="window.location.href='index.html'">⏻</button>
+      <button class="btn-logout" title="Cerrar sesión" onclick="logout()">⏻</button>
     </div>
   </div>
 </aside>
@@ -682,10 +686,10 @@ textarea.form-control{resize:vertical;min-height:75px;}
 
   <!-- TOPBAR -->
   <div class="topbar">
-    <div class="topbar-left">
-      <h1 id="page-title">¡Hola, Sofía! 👋</h1>
-      <p id="page-sub">Bienvenid@ a tu espacio escolar</p>
-    </div>
+      <div class="topbar-left">
+        <h1 id="page-title">¡Hola! 👋</h1>
+        <p id="page-sub">Bienvenid@ a tu espacio escolar</p>
+      </div>
     <div class="topbar-right">
       <div class="topbar-date" id="today-date"></div>
       <div class="notif-wrap">🔔<div class="notif-dot"></div></div>
@@ -698,8 +702,8 @@ textarea.form-control{resize:vertical;min-height:75px;}
     <div class="welcome-banner">
       <div class="welcome-av">🧒</div>
       <div class="welcome-text">
-        <h2>¡Bienvenida, Sofía!</h2>
-        <p>Tu maestra y tu familia están contigo en cada paso 💜</p>
+            <h2>¡Bienvenid@ <span id="welcome-nombre"> </span>!</h2>
+            <p>Tu maestro y tu familia están contigo en cada paso 💜</p>
         <div class="day-chip">📅 <span id="wb-date"></span></div>
       </div>
     </div>
@@ -879,7 +883,7 @@ textarea.form-control{resize:vertical;min-height:75px;}
     </div>
   </div>
 
-  <!-- ══ ASISTENCIA ══ -->
+    <!-- ══ ASISTENCIA ══ -->
   <div class="page" id="p-asistencia">
     <div class="section-heading">✅ Mi Asistencia</div>
     <div class="section-desc">Registro mensual de tu asistencia escolar</div>
@@ -923,11 +927,10 @@ textarea.form-control{resize:vertical;min-height:75px;}
       </div>
     </div>
   </div>
-
   <!-- ══ AVISOS ══ -->
   <div class="page" id="p-avisos">
     <div class="section-heading">📢 Avisos Escolares</div>
-    <div class="section-desc">Comunicados de tu maestra para la familia</div>
+    <div class="section-desc">Comunicados del maestro</div>
     <div id="avisos-container"></div>
   </div>
 
@@ -937,14 +940,14 @@ textarea.form-control{resize:vertical;min-height:75px;}
       <div class="chat-top">
         <div class="chat-top-av">👩‍🏫</div>
         <div>
-          <div class="chat-top-name">Mtra. López</div>
+          <div class="chat-top-name">Mtro. Hector</div>
           <div class="chat-top-sub">Docente del grupo 3°B</div>
         </div>
-        <div class="online-pill"><div class="online-dot2"></div>En línea</div>
+        <div class="online-pill"><div class="online-dot2"></div></div>
       </div>
       <div class="msgs-area" id="msgs-area"></div>
       <div class="chat-input-row">
-        <input class="chat-input" type="text" id="chat-in" placeholder="Escribe un mensaje para la maestra... 😊" onkeydown="if(event.key==='Enter')sendMsg()">
+        <input class="chat-input" type="text" id="chat-in" placeholder="Escribe un mensaje para el maestro... 😊" onkeydown="if(event.key==='Enter')sendMsg()">
         <button class="btn-send" onclick="sendMsg()">➤</button>
       </div>
     </div>
@@ -984,8 +987,8 @@ textarea.form-control{resize:vertical;min-height:75px;}
               <option>10:00 AM</option>
               <option>11:00 AM</option>
               <option>12:00 PM</option>
-              <option>4:00 PM</option>
-              <option>5:00 PM</option>
+              <option>1:00 PM</option>
+              <option>2:00 PM</option>
             </select>
           </div>
           <button class="btn-primary" onclick="solicitarCita()">📅 Solicitar cita</button>
@@ -1004,226 +1007,7 @@ textarea.form-control{resize:vertical;min-height:75px;}
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<script>
-// ═══════════════════════════════════
-//  DATOS DEL ALUMNO
-// ═══════════════════════════════════
-const alumno = {
-  nombre: 'Sofía García López',
-  grupo: '3°B',
-  tutor: 'Mamá de Sofía',
-};
+<script src="js/script.js"></script>
 
-// ── NAV
-const pageTitles = {
-  home:'¡Hola, Sofía! 👋',
-  calificaciones:'Mis Calificaciones ⭐',
-  asistencia:'Mi Asistencia ✅',
-  avisos:'Avisos 📢',
-  chat:'Mensajes 💬',
-  citas:'Agenda de Citas 🗓️',
-};
-const pageSubs = {
-  home:'Bienvenid@ a tu espacio escolar',
-  calificaciones:'Ciclo escolar 2025-2026',
-  asistencia:'Ciclo escolar 2025-2026',
-  avisos:'Comunicados del grupo 3°B',
-  chat:'Conversación con tu maestra',
-  citas:'Grupo 3°B · Mtra. López',
-};
-function goTo(page, el){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById('p-'+page).classList.add('active');
-  if(el) el.classList.add('active');
-  document.getElementById('page-title').textContent = pageTitles[page]||page;
-  document.getElementById('page-sub').textContent  = pageSubs[page]||'';
-}
-
-// ── FECHA
-(function(){
-  const d = new Date();
-  const opts = {weekday:'long',year:'numeric',month:'long',day:'numeric'};
-  const str = d.toLocaleDateString('es-MX',opts);
-  document.getElementById('today-date').textContent = str;
-  document.getElementById('wb-date').textContent = str;
-  document.getElementById('cita-fecha').value = d.toISOString().split('T')[0];
-})();
-
-// ── TAREAS
-const tareas = [
-  {act:'Exposición: El sistema solar',mat:'Ciencias',fecha:'10 mar 2026',cal:'9.5',estado:'ec-ok'},
-  {act:'Examen bimestral',mat:'Matemáticas',fecha:'08 mar 2026',cal:'7.8',estado:'ec-ok'},
-  {act:'Redacción: Mi familia',mat:'Español',fecha:'05 mar 2026',cal:'9.0',estado:'ec-ok'},
-  {act:'Mapa conceptual: Revolución',mat:'Historia',fecha:'03 mar 2026',cal:'8.5',estado:'ec-ok'},
-  {act:'Carrera de velocidad 40m',mat:'Ed. Física',fecha:'28 feb 2026',cal:'9.2',estado:'ec-ok'},
-  {act:'Ecuaciones simples',mat:'Matemáticas',fecha:'20 mar 2026',cal:'—',estado:'ec-pend'},
-  {act:'Lectura: El principito cap.5',mat:'Español',fecha:'22 mar 2026',cal:'—',estado:'ec-pend'},
-];
-(function renderTareas(){
-  const labels={
-    'ec-ok':'✅ Entregada',
-    'ec-pend':'⏳ Pendiente',
-    'ec-miss':'❌ No entregada',
-  };
-  document.getElementById('tareas-tbody').innerHTML = tareas.map(t=>`
-    <tr>
-      <td style="font-weight:800;">${t.act}</td>
-      <td>${t.mat}</td>
-      <td style="color:var(--muted);">${t.fecha}</td>
-      <td style="font-family:'Fredoka One',cursive;font-size:1.05rem;color:var(--lav-d);">${t.cal}</td>
-      <td><span class="entrega-chip ${t.estado}">${labels[t.estado]}</span></td>
-    </tr>`).join('');
-})();
-
-// ── BIMESTRE TABS
-function switchBim(btn, n){
-  document.querySelectorAll('.bim-tab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-}
-
-// ── ASISTENCIA CALENDARIO
-const asistMes = {
-  1:'e',2:'e',3:'p',4:'p',5:'p',
-  6:'e',7:'e',8:'p',9:'p',10:'j',
-  11:'p',12:'p',13:'e',14:'e',15:'p',
-  16:'p',17:'p',18:'p',19:'p',20:'p',
-  21:'e',22:'e',23:'p',24:'f',25:'p',
-  26:'p',27:'p',28:'e',29:'e',30:'p',31:'p',
-};
-(function buildMes(){
-  const g = document.getElementById('mes-grid');
-  const days = ['Do','Lu','Ma','Mi','Ju','Vi','Sa'];
-  g.innerHTML = days.map(d=>`<div class="mes-day-name">${d}</div>`).join('');
-  const first = new Date(2026,2,1).getDay();
-  for(let i=0;i<first;i++) g.innerHTML+=`<div class="mes-day md-e"></div>`;
-  for(let d=1;d<=31;d++){
-    const v = asistMes[d]||'e';
-    const cls = v==='p'?'md-p':v==='f'?'md-f':v==='j'?'md-j':'md-e';
-    const isToday = d===15;
-    g.innerHTML+=`<div class="mes-day ${cls}${isToday?' md-today':''}">${v!=='e'?d:''}</div>`;
-  }
-})();
-
-// ── AVISOS
-const avisos = [
-  {titulo:'Junta mensual de padres',cat:'📅 Evento',chip:'ac-ev',icon:'📅',bg:'abi-purple',texto:'Se les cita el próximo viernes 20 de marzo a las 5:00 PM en el aula de 3°B para tratar temas académicos y conductuales del bimestre.',fecha:'14 mar 2026',nuevo:true},
-  {titulo:'Cooperación material didáctico',cat:'💰 Cooperación',chip:'ac-co',icon:'💰',bg:'abi-amber',texto:'Se solicita una cooperación voluntaria de $50 para material de manualidades del proyecto de arte que presentaremos el mes de abril.',fecha:'12 mar 2026',nuevo:true},
-  {titulo:'Semana de exámenes bimestrales',cat:'📋 Información',chip:'ac-in',icon:'📋',bg:'abi-blue',texto:'Los exámenes del 2do bimestre se realizarán del 25 al 29 de marzo. Se recomienda repasar los temas vistos en clase.',fecha:'10 mar 2026',nuevo:false},
-  {titulo:'Día del niño — actividades especiales',cat:'🎉 Evento',chip:'ac-ev',icon:'🎉',bg:'abi-rose',texto:'El 30 de abril celebraremos el Día del Niño con actividades recreativas, juegos y una pequeña convivencia. ¡No faltes!',fecha:'5 mar 2026',nuevo:false},
-];
-(function renderAvisos(){
-  document.getElementById('avisos-container').innerHTML = avisos.map(a=>`
-    <div class="aviso-full-card">
-      <div class="aviso-badge-icon ${a.bg}">${a.icon}</div>
-      <div class="aviso-full-body">
-        <div class="aviso-full-title">${a.titulo} ${a.nuevo?'<span class="new-badge">NUEVO</span>':''}</div>
-        <div class="aviso-full-text">${a.texto}</div>
-        <div class="aviso-full-meta">
-          <span class="aviso-date-txt">📅 ${a.fecha}</span>
-          <span class="aviso-chip ${a.chip}">${a.cat}</span>
-        </div>
-      </div>
-    </div>`).join('');
-})();
-
-// ── CHAT
-let msgs = [
-  {mine:false,text:'Buenos días Sofía y familia 🌸. Quería comentarles que Sofía ha tenido un desempeño muy bueno esta semana. ¡Felicidades!',hora:'08:40'},
-  {mine:true, text:'¡Muchas gracias maestra! Nos alegra mucho escuchar eso 😊',hora:'08:55'},
-  {mine:false,text:'Por cierto, recuerden que la próxima semana hay exámenes bimestrales. ¡A estudiar! 📚',hora:'09:01'},
-];
-function renderMsgs(){
-  document.getElementById('msgs-area').innerHTML = msgs.map(m=>`
-    <div class="msg ${m.mine?'mine':''}">
-      <div class="msg-av ${m.mine?'mine-av':''}">${m.mine?'SC':'ML'}</div>
-      <div>
-        <div class="bubble">${m.text}</div>
-        <div class="msg-time">${m.hora}</div>
-      </div>
-    </div>`).join('');
-  const a = document.getElementById('msgs-area');
-  a.scrollTop = a.scrollHeight;
-}
-renderMsgs();
-function sendMsg(){
-  const inp = document.getElementById('chat-in');
-  const txt = inp.value.trim();
-  if(!txt) return;
-  const hora = new Date().getHours()+':'+String(new Date().getMinutes()).padStart(2,'0');
-  msgs.push({mine:true,text:txt,hora});
-  inp.value = '';
-  renderMsgs();
-  // Auto-reply
-  setTimeout(()=>{
-    msgs.push({mine:false,text:'Gracias por tu mensaje 😊 Te contestaré a la brevedad.',hora:hora});
-    renderMsgs();
-  },1500);
-}
-
-// ── CITAS CALENDARIO
-let cMes=2, cAño=2026;
-const monthNames=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-function renderCCal(){
-  document.getElementById('c-month-lbl').textContent = `${monthNames[cMes]} ${cAño}`;
-  const g = document.getElementById('c-cal-grid');
-  g.innerHTML = ['Do','Lu','Ma','Mi','Ju','Vi','Sa'].map(d=>`<div class="cal-dname">${d}</div>`).join('');
-  const first = new Date(cAño,cMes,1).getDay();
-  const days = new Date(cAño,cMes+1,0).getDate();
-  for(let i=0;i<first;i++) g.innerHTML+=`<div class="cal-d empty"></div>`;
-  for(let d=1;d<=days;d++){
-    const isToday = d===15&&cMes===2&&cAño===2026;
-    const hc = d===20;
-    g.innerHTML+=`<div class="cal-d${isToday?' today':''}${hc?' has-cita':''}">${d}</div>`;
-  }
-}
-renderCCal();
-function chMes(dir){
-  cMes+=dir;
-  if(cMes>11){cMes=0;cAño++;}
-  if(cMes<0){cMes=11;cAño--;}
-  renderCCal();
-}
-
-// Citas del alumno
-let misCitas = [
-  {hora:'10:00',ampm:'AM',motivo:'Revisión de calificaciones bimestrales',fecha:'20 mar 2026',status:'Confirmada'},
-];
-function renderMisCitas(){
-  document.getElementById('mis-citas').innerHTML = misCitas.length
-    ? misCitas.map(c=>`
-      <div class="cita-item">
-        <div class="cita-time-block"><div class="cita-hour">${c.hora}</div><div class="cita-ampm">${c.ampm}</div></div>
-        <div class="cita-info">
-          <div class="cita-name">📅 ${c.fecha}</div>
-          <div class="cita-sub">${c.motivo}</div>
-          <span class="cita-chip ${c.status==='Confirmada'?'cc-conf':'cc-pend'}">${c.status==='Confirmada'?'✅ Confirmada':'⏳ Pendiente'}</span>
-        </div>
-      </div>`).join('')
-    : '<p style="color:var(--muted);font-size:.86rem;text-align:center;padding:1.5rem;font-weight:700;">Sin citas agendadas 📅</p>';
-}
-renderMisCitas();
-
-function solicitarCita(){
-  const motivo = document.getElementById('cita-motivo').value.trim();
-  const fecha  = document.getElementById('cita-fecha').value;
-  const hora   = document.getElementById('cita-hora').value;
-  if(!motivo) return showToast('✏️ Describe el motivo de la cita');
-  if(!fecha)  return showToast('📅 Selecciona una fecha');
-  const fechaStr = new Date(fecha+'T12:00').toLocaleDateString('es-MX',{day:'numeric',month:'short',year:'numeric'});
-  misCitas.unshift({hora:hora.split(' ')[0],ampm:hora.split(' ')[1],motivo,fecha:fechaStr,status:'Pendiente'});
-  document.getElementById('cita-motivo').value='';
-  renderMisCitas();
-  showToast('¡Cita solicitada con éxito! La maestra la confirmará pronto');
-}
-
-// ── TOAST
-function showToast(msg){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),3000);
-}
-</script>
 </body>
 </html>
