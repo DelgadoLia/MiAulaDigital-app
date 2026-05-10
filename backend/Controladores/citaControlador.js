@@ -35,7 +35,10 @@ async function obtenerCitas(req, res) {
 // Crear cita
 async function crearCita(req, res) {
   try {
-    const { alumnoId, padreId,fecha, hora, motivo } = req.body;
+    const { alumnoId, fecha, hora, motivo } = req.body;
+
+    const padreId = req.usuario.id;
+
     const id = await citaModelo.crearCita(
       alumnoId,
       padreId,
