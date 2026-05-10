@@ -217,7 +217,7 @@ async function iniciarPanelDocente() {
   requireAuth('docente');
   const nb = document.querySelector('.teacher-name');
   if (nb) nb.textContent = localStorage.getItem('nombre') || 'Docente';
-  await Promise.all([ cargarAlumnos(), cargarCalificaciones(), cargarAvisos(), cargarCitas(), cargarChatsDocente() ]);
+  await Promise.all([ cargarAlumnos(), cargarCalificaciones(), cargarAvisos(), cargarCitas(), cargarChatsDocente(), cargarCitas() ]);
   setFechaHoy();
   renderCal();
   shuffleAseo();
@@ -660,7 +660,7 @@ async function sendMsg() {
 async function cargarCitas() {
   try {
     citas = await apiFetch('/citas');
-    renderCitas(); renderCal();
+    renderCitas(); renderMisCitas(); renderCal();
   } catch { mostrarToast('⚠ Error al cargar citas'); }
 }
 
@@ -687,6 +687,40 @@ function renderCitas() {
     : '<p style="color:var(--muted);font-size:.86rem;text-align:center;padding:2rem;">Sin citas hoy</p>';
 }
 
+function renderMisCitas() {
+  const el = document.getElementById('mis-citas');
+  if (!el) return;
+  el.innerHTML = citas.length
+    ? citas.map(c => `
+      <div class="cita-item">
+        <div class="cita-time-block">
+          <div class="cita-hour">
+            ${String(c.hora || '').substring(0,5)}
+          </div>
+        </div>
+        <div class="cita-info">
+          <div class="cita-name">
+            ${c.alumnoNombre || 'Alumno'}
+          </div>
+          <div class="cita-reason">
+            ${c.motivo || ''}
+          </div>
+          <span class="cita-status ${c.estado === 'confirmada' ? 'cs-conf':'cs-pend'}">
+            ${c.estado === 'confirmada'
+              ? '✅ Confirmada'
+              : '⏳ Pendiente'}
+          </span>
+        </div>
+      </div>
+    `).join('')
+
+    : `
+      <p style="color:var(--muted);font-size:.86rem;">
+        No tienes citas agendadas
+      </p>
+    `;
+}
+
 async function confirmarCita(id) {
   try { await apiFetch(`/citas/${id}/confirmar`, { method:'PUT' }); mostrarToast('✅ Cita confirmada'); await cargarCitas(); }
   catch (err) { mostrarToast('❌ '+err.message); }
@@ -696,16 +730,89 @@ async function eliminarCita(id, btn) {
   catch (err) { mostrarToast('❌ '+err.message); }
 }
 
+async function solicitarCita() {
+
+  const alumnoId = localStorage.getItem('alumnoId');
+
+  const fecha  = document.getElementById('cita-fecha').value;
+  const hora   = document.getElementById('cita-hora').value;
+  const motivo = document.getElementById('cita-motivo').value.trim();
+
+  if (!fecha || !hora || !motivo) {
+    return Swal.fire({
+      icon: 'warning',
+      title: 'Campos incompletos',
+      text: 'Completa todos los campos'
+    });
+  }
+
+  try {
+
+    await apiFetch('/citas', {
+      method: 'POST',
+      body: JSON.stringify({
+        alumnoId,
+        fecha,
+        hora,
+        motivo
+      })
+    });
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Cita solicitada',
+      text: 'El maestro recibirá tu solicitud'
+    });
+
+    cargarCitas();
+
+  } catch (err) {
+
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: err.message
+    });
+
+  }
+}
+
 async function saveCita() {
+
   const alumnoId = document.getElementById('nc-alumno-select').value;
   const fecha    = document.getElementById('nc-fecha').value;
   const hora     = document.getElementById('nc-hora').value;
   const motivo   = document.getElementById('nc-motivo').value.trim();
-  if (!fecha||!hora) return alert('Completa los campos requeridos.');
+
+  if (!fecha || !hora)
+    return alert('Completa los campos.');
+
   try {
-    await apiFetch('/citas', { method:'POST', body: JSON.stringify({ alumnoId, fecha, hora, motivo }) });
-    closeOverlay('modal-cita'); mostrarToast('📅 Cita agendada'); await cargarCitas();
-  } catch (err) { mostrarToast('❌ '+err.message); }
+
+    const alumno = alumnos.find(a => a.id == alumnoId);
+
+    await apiFetch('/citas', {
+      method:'POST',
+      body: JSON.stringify({
+        alumnoId,
+        padreId: alumno.tutorId,
+        fecha,
+        hora,
+        motivo
+      })
+    });
+
+    closeOverlay('modal-cita');
+
+    mostrarToast('📅 Cita agendada');
+
+    await cargarCitas();
+
+  } catch (err) {
+
+    mostrarToast('❌ ' + err.message);
+
+  }
 }
 
 // ── Calendario
@@ -859,7 +966,8 @@ async function iniciarPanelAlumno() {
   // Cargar datos dinámicamente
   await Promise.all([
     cargarCalificacionesAlumno(),
-    cargarAsistenciaAlumno()
+    cargarAsistenciaAlumno(),
+    cargarCitas(),
   ]);
   
   setFechaHoy();
