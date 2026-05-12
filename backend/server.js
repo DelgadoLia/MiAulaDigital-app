@@ -3,6 +3,7 @@ const cors    = require("cors");
 const path = require("path");
 require("dotenv").config();
 const citaRutas = require('./Rutas/citaRutas');
+const alumnoRutas = require("./Rutas/alumnoRutas");
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use("/api/alumnos",       require("./Rutas/alumnoRutas"));
 app.use("/api/calificaciones",require("./Rutas/calificacionRutas"));
 app.use("/api/asistencia",    require("./Rutas/asistenciaRutas"));
 app.use('/api/citas', citaRutas);
+app.use("/api/alumnos", alumnoRutas);
 
 app.get("/", (req, res) => {
   res.json({ mensaje: "Mi Aula Digital API funcionando" });

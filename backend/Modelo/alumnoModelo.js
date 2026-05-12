@@ -1,4 +1,5 @@
 const pool = require("../DB/conexion");
+const db = require("../Config/db");
 
 async function getAlumnos() {
   const [rows] = await pool.query(
@@ -38,10 +39,29 @@ async function eliminarAlumno(id) {
   return result.affectedRows;
 }
 
+async function obtenerAlumnoPorId(id) {
+
+  const [rows] = await db.query(`
+    SELECT
+      a.id,
+      a.nombre,
+      a.grupo,
+      a.fechaNacimiento,
+      p.nombre AS tutor
+    FROM alumnos a
+    LEFT JOIN padres p
+      ON a.tutorId = p.id
+    WHERE a.id = ?
+  `, [id]);
+
+  return rows[0];
+}
+
 module.exports = {
   getAlumnos,
   getAlumnoPorId,
   crearAlumno,
   actualizarAlumno,
   eliminarAlumno,
+  obtenerAlumnoPorId
 };

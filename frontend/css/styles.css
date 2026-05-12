@@ -411,18 +411,6 @@ footer strong { color:white; font-family:'Fredoka One',cursive; letter-spacing:.
 .reveal { opacity:0; transform:translateY(30px); transition:opacity .7s ease, transform .7s ease; }
 .reveal.visible { opacity:1; transform:none; }
 
-/* ══════════════════════════════════════
-   NOTIF DOT
-══════════════════════════════════════ */
-.notif-dot {
-  width:9px; height:9px; border-radius:50%;
-  background:var(--rose-d); display:inline-block; margin-left:4px;
-  animation:pulse 1.8s infinite;
-}
-@keyframes pulse {
-  0%,100%{opacity:1;transform:scale(1);}
-  50%{opacity:.5;transform:scale(1.4);}
-}
 
 /* ══════════════════════════════════════
    RESPONSIVE LANDING
@@ -814,11 +802,33 @@ textarea.form-control { resize:vertical; min-height:90px; }
 .cal-month { font-size:1rem; font-weight:800; color:var(--text); }
 .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:.35rem; }
 .cal-day-name { text-align:center; font-size:.72rem; font-weight:800; color:var(--muted); padding:.4rem 0; }
-.cal-day { aspect-ratio:1; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:.85rem; font-weight:700; cursor:pointer; transition:background .15s,color .15s; position:relative; }
+.cal-day { aspect-ratio:1; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:.85rem; font-weight:700; cursor:pointer; transition:background .15s,color .15s; position:relative; flex-direction:column; overflow:hidden; }
 .cal-day:hover { background:var(--lav-l); }
 .cal-day.today { background:linear-gradient(135deg,var(--lav-d),var(--mint-d)); color:white; font-weight:900; }
-.cal-day.has-cita::after { content:''; position:absolute; bottom:3px; left:50%; transform:translateX(-50%); width:5px; height:5px; border-radius:50%; background:var(--rose-d); }
-.cal-day.today.has-cita::after { background:var(--butter-d); }
+.cal-day.has-cita {
+  background:var(--butter-l);
+  border:3px solid var(--butter-d);
+  color:var(--text);
+  font-weight:900;
+  padding:2px;
+}
+.cal-day.has-cita::before {
+  content:attr(data-cita);
+  position:absolute;
+  bottom:1px;
+  left:1px;
+  right:1px;
+  font-size:.5rem;
+  font-weight:700;
+  color:var(--butter-d);
+  text-align:center;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  line-height:1;
+}
+.cal-day.today.has-cita { background:linear-gradient(135deg,var(--butter-d),#ffc542); color:white; border-color:var(--butter-d); }
+.cal-day.today.has-cita::before { color:rgba(255,255,255,0.9); }
 .cal-day.empty { cursor:default; }
 .cita-item { background:white; border-radius:16px; padding:1rem 1.2rem; box-shadow:var(--shadow-card); margin-bottom:.8rem; display:flex; gap:.8rem; align-items:flex-start; border:2px solid rgba(201,184,245,0.12); }
 .cita-time-block { background:var(--lav-l); border:2px solid rgba(201,184,245,0.4); border-radius:14px; padding:.5rem .7rem; text-align:center; flex-shrink:0; min-width:56px; }

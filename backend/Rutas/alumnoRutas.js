@@ -8,5 +8,6 @@ router.get("/:id",    verificarToken, ctrl.getAlumno);
 router.post("/",      verificarToken, soloDocente, ctrl.crearAlumno);
 router.put("/:id",    verificarToken, soloDocente, ctrl.actualizarAlumno);
 router.delete("/:id", verificarToken, soloDocente, ctrl.eliminarAlumno);
+router.get("/perfil", verificarToken, ctrl.obtenerPerfilAlumno);
 
 module.exports = router;

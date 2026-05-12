@@ -529,6 +529,12 @@ async function cargarAvisos() {
   } catch { mostrarToast('⚠ Error al cargar avisos'); }
 }
 
+async function cargarAvisosAlumno() {
+  try {
+    avisos = await apiFetch('/avisos');
+  } catch { avisos = []; }
+}
+
 const avisoIcons = ['📅','💰','📋','⚠'];
 const avisoWrap  = ['av-purple','av-amber','av-blue','av-blue'];
 
@@ -821,27 +827,51 @@ let calMonth = new Date().getMonth();
 
 function renderCal() {
   const names = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  const lbl = document.getElementById('cal-month-label');
+  
+  // Busca ambos posibles IDs (para panel docente y alumno)
+  const lbl = document.getElementById('cal-month-label') || document.getElementById('c-month-lbl');
   if (lbl) lbl.textContent = `${names[calMonth]} ${calYear}`;
-  const g = document.getElementById('cal-grid');
+  
+  const g = document.getElementById('cal-grid') || document.getElementById('c-cal-grid');
   if (!g) return;
-  g.innerHTML = ['Do','Lu','Ma','Mi','Ju','Vi','Sa'].map(d=>`<div class="cal-day-name">${d}</div>`).join('');
+  
+  g.innerHTML = ['Do','Lu','Ma','Mi','Ju','Vi','Sa'].map(d=>`<div class="cal-dname">${d}</div>`).join('');
   const first = new Date(calYear, calMonth, 1).getDay();
   const days  = new Date(calYear, calMonth+1, 0).getDate();
-  const citasDias = citas.map(c => new Date(c.fecha+'T12:00').getDate());
-  for (let i=0; i<first; i++) g.innerHTML += `<div class="cal-day empty"></div>`;
+  
+  // Crea un mapa de citas por día para el mes actual
+  const citasPorDia = {};
+  citas
+    .filter(c => c.estado === 'confirmada')
+    .forEach(c => {
+      const fechaCita = new Date(c.fecha+'T12:00');
+      if (fechaCita.getFullYear() === calYear && fechaCita.getMonth() === calMonth) {
+        const dia = fechaCita.getDate();
+        if (!citasPorDia[dia]) citasPorDia[dia] = [];
+        citasPorDia[dia].push(c);
+      }
+    });
+  
+  for (let i=0; i<first; i++) g.innerHTML += `<div class="cal-d empty"></div>`;
   const today = new Date();
   for (let d=1; d<=days; d++) {
     const isToday = d===today.getDate() && calMonth===today.getMonth() && calYear===today.getFullYear();
-    const hasCita = citasDias.includes(d);
-    g.innerHTML += `<div class="cal-day${isToday?' today':''}${hasCita?' has-cita':''}">${d}</div>`;
+    const hasCita = citasPorDia[d] && citasPorDia[d].length > 0;
+    const motivo = hasCita ? citasPorDia[d][0].motivo?.substring(0, 20) + '...' : '';
+    g.innerHTML += `<div class="cal-d${isToday?' today':''}${hasCita?' has-cita':''}" data-cita="${motivo}">${d}</div>`;
   }
 }
+
 function changeMonth(dir) {
   calMonth += dir;
   if (calMonth > 11) { calMonth=0; calYear++; }
   if (calMonth < 0)  { calMonth=11; calYear--; }
   renderCal();
+}
+
+// Alias para el HTML del alumno que usa chMes
+function chMes(dir) {
+  changeMonth(dir);
 }
 function addSlot() {
   const f = document.getElementById('new-cita-fecha')?.value;
@@ -968,14 +998,240 @@ async function iniciarPanelAlumno() {
     cargarCalificacionesAlumno(),
     cargarAsistenciaAlumno(),
     cargarCitas(),
+    cargarAvisosAlumno(),
   ]);
   
+  // Renderizar el home con todos los datos dinámicos
+  renderHomeAlumno();
+  renderCalificacionesPanel();
   setFechaHoy();
+}
+
+function renderHomeAlumno() {
+  // Nombre del alumno
+  const wn = document.getElementById('welcome-nombre');
+  if (wn) wn.textContent = alumnoActual.nombre.split(' ')[0]; // Solo primer nombre
+  
+  // Promedio general
+  const promedio = calificacionesAlumno.length > 0 
+    ? (calificacionesAlumno.reduce((sum, c) => sum + parseFloat(c.calificacion || 0), 0) / calificacionesAlumno.length).toFixed(1)
+    : '0.0';
+  const pg = document.getElementById('promedio-general');
+  if (pg) pg.textContent = promedio;
+  const msgProm = document.getElementById('msg-promedio');
+
+  if (msgProm) {
+
+    if (promedio >= 10) {
+      msgProm.textContent = '🏆 ¡Perfecto!';
+    }
+    else if (promedio >= 9) {
+      msgProm.textContent = '🌟 ¡Excelente trabajo!';
+    }
+    else if (promedio >= 8) {
+      msgProm.textContent = '👏 ¡Muy bien!';
+    }
+    else if (promedio >= 7) {
+      msgProm.textContent = '👍 Buen desempeño';
+    }
+    else if (promedio >= 6) {
+      msgProm.textContent = '⚠ Necesita mejorar';
+    }
+    else {
+      msgProm.textContent = '🚨 Riesgo académico';
+    }
+
+  }
+  // Asistencia general
+  const presentes = asistenciaAlumno.filter(a => a.estado === 'P').length;
+  const total = asistenciaAlumno.length || 1;
+  const porcentajeAsistencia = Math.round((presentes / total) * 100);
+  const ag = document.getElementById('asistencia-general');
+  if (ag) ag.textContent = porcentajeAsistencia + '%';
+  const msgAsistencia = document.getElementById('msg-asistencia');
+
+  if (msgAsistencia) {
+
+    if (porcentajeAsistencia === 100) {
+      msgAsistencia.textContent = '🏅 Asistencia perfecta';
+    }
+    else if (porcentajeAsistencia >= 90) {
+      msgAsistencia.textContent = '✅ Excelente asistencia';
+    }
+    else if (porcentajeAsistencia >= 80) {
+      msgAsistencia.textContent = '👍 Buena asistencia';
+    }
+    else if (porcentajeAsistencia >= 70) {
+      msgAsistencia.textContent = '⚠ Atención requerida';
+    }
+    else {
+      msgAsistencia.textContent = '🚨 Riesgo de inasistencias';
+    }
+
+  }
+  
+  // Tareas entregadas
+  const tareasEntregadas = calificacionesAlumno.filter(c => c.calificacion).length;
+  const tareasPendientes = calificacionesAlumno.filter(c => !c.calificacion).length;
+  const te = document.getElementById('tareas_entregadas');
+  if (te) te.textContent = tareasEntregadas;
+  
+  const tp = document.getElementById('tareas_pendientes');
+  if (tp) {
+
+    const totalTareas = tareasEntregadas + tareasPendientes;
+
+    if (tareasPendientes === 0) {
+      tp.textContent = '🎉 Todas entregadas';
+    }
+    else if (tareasEntregadas >= totalTareas * 0.9) {
+      tp.textContent = '👏 Excelente cumplimiento';
+    }
+    else if (tareasEntregadas >= totalTareas * 0.7) {
+      tp.textContent = tareasPendientes + ' pendientes ⏳';
+    }
+    else {
+      tp.textContent = '⚠ Muchas tareas pendientes';
+    }
+
+  }
+  // Mensajes nuevos
+  const mn = document.getElementById('mensajes-nuevos');
+  if (mn) mn.textContent = '0'; // Placeholder, puedes actualizar con data real
+  
+  // Renderizar materias
+  renderMateriasHome();
+  
+  // Renderizar avisos recientes
+  renderAvisosRecientes();
+  
+  // Renderizar asistencia de la semana
+  renderAsistenciaSemana();
+}
+
+function renderMateriasHome() {
+  // Agrupar calificaciones por materia
+  const materiaMap = {};
+  calificacionesAlumno.forEach(c => {
+    if (!materiaMap[c.materia]) {
+      materiaMap[c.materia] = [];
+    }
+    materiaMap[c.materia].push(parseFloat(c.calificacion || 0));
+  });
+  
+  const materias = [
+    { nombre: 'Español', icon: '📖', bg: 'mint' },
+    { nombre: 'Matemáticas', icon: '🔢', bg: 'rose' },
+    { nombre: 'Ciencias', icon: '🔬', bg: 'sky' },
+    { nombre: 'Historia', icon: '📜', bg: 'butter' },
+    { nombre: 'Ed. Física', icon: '⚽', bg: 'peach' }
+  ];
+  
+  const filas = document.querySelectorAll('#p-home .materia-row');
+  filas.forEach((fila, i) => {
+    const materia = materias[i];
+    if (materia) {
+      const calificaciones = materiaMap[materia.nombre] || [];
+      const promedio = calificaciones.length > 0 
+        ? (calificaciones.reduce((a, b) => a + b, 0) / calificaciones.length).toFixed(1)
+        : '—';
+      
+      const nombreEl = fila.querySelector('.materia-name');
+      const calEl = fila.querySelector('.materia-cal');
+      
+      if (nombreEl) nombreEl.textContent = materia.nombre;
+      if (calEl) {
+        calEl.textContent = promedio;
+        // Limpiar clases previas
+        calEl.classList.remove('mc-a', 'mc-b', 'mc-c');
+        // Aplicar clase según la calificación
+        if (promedio !== '—') {
+          const num = parseFloat(promedio);
+          if (num >= 9) {
+            calEl.classList.add('mc-a');
+          } else if (num >= 7) {
+            calEl.classList.add('mc-b');
+          } else {
+            calEl.classList.add('mc-c');
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderAvisosRecientes() {
+  const avisosMinis = document.querySelectorAll('#p-home .card .aviso-mini');
+  const avisosRecientes = avisos.slice(0, 3); // Primeros 3 avisos
+  
+  avisosMinis.forEach((mini, i) => {
+    if (avisosRecientes[i]) {
+      const av = avisosRecientes[i];
+      const titulo = mini.querySelector('.aviso-mini-text');
+      const fecha = mini.querySelector('.aviso-mini-date');
+      
+      if (titulo) titulo.textContent = av.titulo || av.contenido.substring(0, 40);
+      if (fecha) {
+        const fechaObj = new Date(av.fecha);
+        const ahora = new Date();
+        const diffTime = Math.abs(ahora - fechaObj);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        fecha.textContent = diffDays === 0 ? 'hoy' : 'hace ' + diffDays + ' día' + (diffDays > 1 ? 's' : '');
+      }
+    } else {
+      // Limpiar si no hay avisos
+      const titulo = mini.querySelector('.aviso-mini-text');
+      const fecha = mini.querySelector('.aviso-mini-date');
+      if (titulo) titulo.textContent = '—';
+      if (fecha) fecha.textContent = '—';
+    }
+  });
+}
+
+function renderAsistenciaSemana() {
+  // Obtener los últimos 5 días de asistencia (semana)
+  const diasSemana = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie'];
+  const container = document.querySelector('#p-home .card:last-child');
+  
+  if (!container) return;
+  
+  // Buscar los divs que contienen los días
+  const diasDivs = container.querySelectorAll('[style*="text-align:center;flex:1;"]');
+  
+  // Tomar los últimos 5 registros de asistencia
+  const asistenciaSemana = asistenciaAlumno.slice(-5);
+  
+  diasDivs.forEach((dia, i) => {
+    if (i >= diasSemana.length) return;
+    
+    const estado = asistenciaSemana[i]?.estado || 'P';
+    const badge = dia.querySelector('div:first-child');
+    const label = dia.querySelector('div:nth-child(2)');
+    
+    if (badge) {
+      // Aplicar estilos según el estado
+      if (estado === 'P') {
+        badge.style.background = 'var(--mint-l)';
+        badge.style.color = 'var(--mint-d)';
+        badge.textContent = 'P';
+      } else if (estado === 'F') {
+        badge.style.background = 'var(--rose-l)';
+        badge.style.color = 'var(--rose-d)';
+        badge.textContent = 'F';
+      } else if (estado === 'J') {
+        badge.style.background = 'var(--butter-l)';
+        badge.style.color = '#a07000';
+        badge.textContent = 'J';
+      }
+    }
+    if (label) label.textContent = diasSemana[i];
+  });
 }
 
 async function cargarCalificacionesAlumno() {
   try {
     calificacionesAlumno = await apiFetch(`/calificaciones/${alumnoActual.id}`);
+    console.log(calificacionesAlumno[0]);
     renderCalificacionesAlumno();
   } catch (err) {
     console.error('Error cargando calificaciones:', err);
@@ -993,14 +1249,24 @@ function renderCalificacionesAlumno() {
   }
   
   tbody.innerHTML = calificacionesAlumno.map(c => {
-    const estado = c.nota ? 'ec-ok' : 'ec-pend';
-    const notaText = c.nota ? parseFloat(c.nota).toFixed(1) : '—';
+    const estado = c.calificacion ? 'ec-ok' : 'ec-pend';
+    const notaText = c.calificacion ? parseFloat(c.calificacion).toFixed(1) : '—';
     return `<tr>
       <td style="font-weight:700;color:var(--text);">${c.actividad || 'Actividad'}</td>
       <td style="color:var(--muted);font-size:.88rem;">${c.materia || '—'}</td>
-      <td style="color:var(--muted);font-size:.88rem;">${c.fecha || '—'}</td>
+      <td style="color:var(--muted);font-size:.88rem;">
+        ${
+          c.fecha
+            ? new Date(c.fecha).toLocaleDateString('es-MX', {
+                day: '2-digit',
+                month: 'long',
+                year: 'numeric'
+              })
+            : '—'
+        }
+      </td>
       <td><span style="background:var(--mint-l);color:var(--mint-d);padding:.25rem .7rem;border-radius:10px;font-weight:700;font-size:.8rem;">${notaText}</span></td>
-      <td><span class="entrega-chip ${estado}">${c.nota ? '✓ Calificado' : '⏳ Pendiente'}</span></td>
+      <td><span class="entrega-chip ${estado}">${c.calificacion ? '✓ Calificado' : '⏳ Pendiente'}</span></td>
     </tr>`;
   }).join('');
 }
@@ -1082,6 +1348,10 @@ function setFechaHoy() {
   
   const td = document.getElementById('today-date');
   if (td) td.textContent = str;
+  
+  // También actualizar en el home
+  const wbd = document.getElementById('wb-date');
+  if (wbd) wbd.textContent = str;
 }
 
 function goTo(page, el) {
@@ -1111,13 +1381,19 @@ function goTo(page, el) {
   if (subEl) {
     const subs = {
       home: 'Bienvenid@ a tu espacio escolar',
-      calificaciones: 'Ciclo escolar 2025-2026',
-      asistencia: 'Ciclo escolar 2025-2026',
-      avisos: 'Comunicados del grupo ' + alumnoActual.grupo,
-      chat: 'Conversación con tu maestro',
-      citas: 'Grupo ' + alumnoActual.grupo + ' · Mtro. Hector'
+      calificaciones: 'Grupo ' + alumnoActual.grupo + ' · Mtro. Hector',
+      asistencia: 'Grupo ' + alumnoActual.grupo + ' · Mtro. Hector',
+      avisos: 'Grupo ' + alumnoActual.grupo + ' · Mtro. Hector',
+      chat: 'Grupo ' + alumnoActual.grupo + ' · Mtro. Hector',
+      citas: 'Grupo ' + alumnoActual.grupo + ' · Mtro. Hector',
+      aseo: 'Grupo ' + alumnoActual.grupo + ' · Mtro. Hector'
     };
     subEl.textContent = subs[page] || '';
+  }
+  
+  // Si es aseo, renderizar el contenido
+  if (page === 'aseo') {
+    renderAseoAlumno();
   }
 }
 
@@ -1128,6 +1404,39 @@ function showToast(msg) {
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 3000);
   }
+}
+
+// Rol de Aseo para Alumno (solo lectura)
+function renderAseoAlumno() {
+  const el = document.getElementById('aseo-grid-alumno');
+  if (!el) return;
+  
+  const diasSemana = ['Lunes','Martes','Miércoles','Jueves','Viernes'];
+  const aseoActividades = ['Barrer','Trapear','Limpiar pizarrón','Organizar pupitres','Recoger basura'];
+  const nombre = alumnoActual.nombre.split(' ')[0]; // Solo primer nombre
+  
+  // Buscar en qué días aparece el alumno en el aseo (esto es simulado)
+  // En producción, esto vendría del backend
+  const diasAsignados = [];
+  
+  el.innerHTML = diasSemana.map((d, i) => `
+    <div class="aseo-day-card">
+      <div class="aseo-day-title">📅 ${d}</div>
+      ${aseoActividades.map((act, j) => {
+        const colors = ['#5cbf99','#f5965a','#f07090','#9b7ee8','#60b8f0'];
+        return `
+          <div class="aseo-student-row">
+            <div class="aseo-dot" style="background:${colors[j]};"></div>
+            <div>
+              <div style="font-size:.82rem;font-weight:800;">${nombre}</div>
+              <div style="font-size:.72rem;color:var(--muted);font-weight:700;">${act}</div>
+            </div>
+            <span class="aseo-num">${j+1}</span>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `).join('');
 }
 
 // Logout
@@ -1160,3 +1469,69 @@ function logout() {
   });
 }
 
+function renderCalificacionesPanel() {
+
+  const materias = {
+    "Español": "esp",
+    "Matemáticas": "mat",
+    "Ciencias": "cie",
+    "Historia": "his",
+    "Ed. Física": "edf"
+  };
+
+  let suma = 0;
+  let total = 0;
+
+  Object.entries(materias).forEach(([materia, key]) => {
+
+    const registros = calificacionesAlumno.filter(
+      c => c.materia === materia
+    );
+
+    if (registros.length > 0) {
+
+      const promedio = (
+        registros.reduce(
+          (acc, r) => acc + parseFloat(r.calificacion),
+          0
+        ) / registros.length
+      ).toFixed(1);
+
+      document.getElementById(`cal-${key}`).textContent = promedio;
+
+      document.getElementById(`status-${key}`).textContent =
+        obtenerMensajeCalificacion(promedio);
+
+      suma += parseFloat(promedio);
+      total++;
+    }
+  });
+
+  const promedioGeneral =
+    total > 0 ? (suma / total).toFixed(1) : "0";
+
+  document.getElementById("prom-general").textContent =
+    promedioGeneral;
+
+  document.getElementById("prom-status").textContent =
+    obtenerMensajeCalificacion(promedioGeneral);
+}
+
+function obtenerMensajeCalificacion(cal) {
+
+  cal = parseFloat(cal);
+
+  if (cal >= 10)
+    return "🏆 Excelente";
+
+  if (cal >= 9)
+    return "🌟 Muy bien";
+
+  if (cal >= 8)
+    return "👍 Buen trabajo";
+
+  if (cal >= 7)
+    return "⚠️ Puede mejorar";
+
+  return "❌ Requiere apoyo";
+}

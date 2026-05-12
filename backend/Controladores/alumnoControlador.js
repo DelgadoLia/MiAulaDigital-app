@@ -54,4 +54,27 @@ async function eliminarAlumno(req, res) {
   }
 }
 
-module.exports = { getAlumnos, getAlumno, crearAlumno, actualizarAlumno, eliminarAlumno };
+async function obtenerPerfilAlumno(req, res) {
+  try {
+    const alumnoId = req.usuario.alumnoId;
+
+    const alumno = await modelo.obtenerAlumnoPorId(alumnoId);
+
+    if (!alumno) {
+      return res.status(404).json({
+        mensaje: "Alumno no encontrado"
+      });
+    }
+
+    res.json(alumno);
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      mensaje: "Error al obtener alumno"
+    });
+  }
+}
+
+module.exports = { getAlumnos, getAlumno, crearAlumno, actualizarAlumno, eliminarAlumno, obtenerPerfilAlumno };
