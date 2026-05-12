@@ -176,29 +176,11 @@
 
         <div class="card">
           <div class="card-heading">📅 Asistencia esta semana</div>
-          <div style="display:flex;gap:.4rem;justify-content:center;margin-top:.5rem;">
-            <div style="text-align:center;flex:1;">
-              <div style="width:36px;height:36px;border-radius:10px;background:var(--mint-l);color:var(--mint-d);font-size:.75rem;font-weight:900;display:flex;align-items:center;justify-content:center;margin:0 auto .3rem;">P</div>
-              <div style="font-size:.68rem;color:var(--muted);font-weight:800;">Lun</div>
-            </div>
-            <div style="text-align:center;flex:1;">
-              <div style="width:36px;height:36px;border-radius:10px;background:var(--mint-l);color:var(--mint-d);font-size:.75rem;font-weight:900;display:flex;align-items:center;justify-content:center;margin:0 auto .3rem;">P</div>
-              <div style="font-size:.68rem;color:var(--muted);font-weight:800;">Mar</div>
-            </div>
-            <div style="text-align:center;flex:1;">
-              <div style="width:36px;height:36px;border-radius:10px;background:var(--rose-l);color:var(--rose-d);font-size:.75rem;font-weight:900;display:flex;align-items:center;justify-content:center;margin:0 auto .3rem;">F</div>
-              <div style="font-size:.68rem;color:var(--muted);font-weight:800;">Mié</div>
-            </div>
-            <div style="text-align:center;flex:1;">
-              <div style="width:36px;height:36px;border-radius:10px;background:var(--mint-l);color:var(--mint-d);font-size:.75rem;font-weight:900;display:flex;align-items:center;justify-content:center;margin:0 auto .3rem;">P</div>
-              <div style="font-size:.68rem;color:var(--muted);font-weight:800;">Jue</div>
-            </div>
-            <div style="text-align:center;flex:1;">
-              <div style="width:36px;height:36px;border-radius:10px;background:var(--mint-l);color:var(--mint-d);font-size:.75rem;font-weight:900;display:flex;align-items:center;justify-content:center;margin:0 auto .3rem;">P</div>
-              <div style="font-size:.68rem;color:var(--muted);font-weight:800;">Vie</div>
-            </div>
+
+          <div class="week-attendance" id="week-attendance">
           </div>
         </div>
+
       </div>
     </div>
   </div>
@@ -290,49 +272,78 @@
     <div class="asist-summary">
       <div class="asist-stat">
         <div class="asist-ico">✅</div>
-        <div class="asist-val" style="color:var(--mint-d);">18</div>
+        <div class="asist-val" id="total-presentes" style="color:var(--mint-d);">0</div>
         <div class="asist-lbl">Días presentes</div>
       </div>
       <div class="asist-stat">
         <div class="asist-ico">❌</div>
-        <div class="asist-val" style="color:var(--rose-d);">1</div>
+        <div class="asist-val" id="total-faltas" style="color:var(--rose-d);">0</div>
         <div class="asist-lbl">Faltas</div>
       </div>
       <div class="asist-stat">
         <div class="asist-ico">📋</div>
-        <div class="asist-val" style="color:#a07000;">1</div>
+        <div class="asist-val" id="total-justificadas" style="color:#a07000;">0</div>
         <div class="asist-lbl">Justificadas</div>
       </div>
       <div class="asist-stat">
         <div class="asist-ico">🏅</div>
-        <div class="asist-val" style="color:var(--lav-d);">94%</div>
+        <div class="asist-val" id="porcentaje-asistencia" style="color:var(--lav-d);">0%</div>
         <div class="asist-lbl">Porcentaje</div>
       </div>
     </div>
+    <div class="card asistencia-card">
 
-    <div class="card">
-      <div class="card-heading">📅 Marzo 2026</div>
-      <div class="mes-grid" id="mes-grid"></div>
-      <div style="display:flex;gap:1rem;margin-top:1rem;flex-wrap:wrap;">
-        <div style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:800;color:var(--mint-d);">
-          <div style="width:14px;height:14px;border-radius:4px;background:var(--mint-l);"></div>Presente
-        </div>
-        <div style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:800;color:var(--rose-d);">
-          <div style="width:14px;height:14px;border-radius:4px;background:var(--rose-l);"></div>Falta
-        </div>
-        <div style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:800;color:#a07000;">
-          <div style="width:14px;height:14px;border-radius:4px;background:var(--butter-l);"></div>Justificada
-        </div>
-      </div>
+  <div class="calendar-header">
+
+    <div class="card-heading" id="mes-titulo">
+      📅 Marzo 2026
+    </div>
+
+    <div class="calendar-actions">
+      <button class="btn-primary btn-cal" onclick="cambiarMes(-1)">
+        ⬅
+      </button>
+
+      <button class="btn-primary btn-cal" onclick="cambiarMes(1)">
+        ➡
+      </button>
+    </div>
+  </div>
+  <div class="mes-grid" id="mes-grid"></div>
+  <div style="display:flex;gap:1rem;margin-top:1rem;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:800;color:var(--mint-d);">
+      <div style="width:14px;height:14px;border-radius:4px;background:var(--mint-l);"></div>Presente
+    </div>
+    <div style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:800;color:var(--rose-d);">
+      <div style="width:14px;height:14px;border-radius:4px;background:var(--rose-l);"></div>Falta
+    </div>
+    <div style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;font-weight:800;color:#a07000;">
+      <div style="width:14px;height:14px;border-radius:4px;background:var(--butter-l);"></div>Justificada
     </div>
   </div>
 
   <!-- ══ AVISOS ══ -->
-  <div class="page" id="p-avisos">
-    <div class="section-heading">📢 Avisos Escolares</div>
-    <div class="section-desc">Comunicados del maestro</div>
-    <div id="avisos-container"></div>
-  </div>
+  const avisos = [
+  {titulo:'Junta mensual de padres',cat:'📅 Evento',chip:'ac-ev',icon:'📅',bg:'abi-purple',texto:'Se les cita el próximo viernes 20 de marzo a las 5:00 PM en el aula de 3°B para tratar temas académicos y conductuales del bimestre.',fecha:'14 mar 2026',nuevo:true},
+  {titulo:'Cooperación material didáctico',cat:'💰 Cooperación',chip:'ac-co',icon:'💰',bg:'abi-amber',texto:'Se solicita una cooperación voluntaria de $50 para material de manualidades del proyecto de arte que presentaremos el mes de abril.',fecha:'12 mar 2026',nuevo:true},
+  {titulo:'Semana de exámenes bimestrales',cat:'📋 Información',chip:'ac-in',icon:'📋',bg:'abi-blue',texto:'Los exámenes del 2do bimestre se realizarán del 25 al 29 de marzo. Se recomienda repasar los temas vistos en clase.',fecha:'10 mar 2026',nuevo:false},
+  {titulo:'Día del niño — actividades especiales',cat:'🎉 Evento',chip:'ac-ev',icon:'🎉',bg:'abi-rose',texto:'El 30 de abril celebraremos el Día del Niño con actividades recreativas, juegos y una pequeña convivencia. ¡No faltes!',fecha:'5 mar 2026',nuevo:false},
+  ];
+  (function renderAvisos(){
+    document.getElementById('avisos-container').innerHTML = avisos.map(a=>`
+      <div class="aviso-full-card">
+        <div class="aviso-badge-icon ${a.bg}">${a.icon}</div>
+        <div class="aviso-full-body">
+          <div class="aviso-full-title">${a.titulo} ${a.nuevo?'<span class="new-badge">NUEVO</span>':''}</div>
+          <div class="aviso-full-text">${a.texto}</div>
+          <div class="aviso-full-meta">
+            <span class="aviso-date-txt">📅 ${a.fecha}</span>
+            <span class="aviso-chip ${a.chip}">${a.cat}</span>
+          </div>
+        </div>
+      </div>`).join('');
+  })();
+
 
   <!-- ══ CHAT ══ -->
   <div class="page" id="p-chat">

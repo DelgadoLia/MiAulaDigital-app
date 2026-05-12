@@ -369,17 +369,51 @@ tbody td{padding:.65rem 1rem;color:var(--text);vertical-align:middle;font-weight
 .asist-lbl{font-size:.76rem;color:var(--muted);font-weight:700;margin-top:.1rem;}
 .asist-ico{font-size:1.4rem;margin-bottom:.3rem;}
 
-.mes-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.4rem;margin-top:1rem;}
-.mes-day-name{text-align:center;font-size:.7rem;font-weight:800;color:var(--muted);padding:.35rem 0;}
-.mes-day{
-  aspect-ratio:1;border-radius:10px;display:flex;align-items:center;
-  justify-content:center;font-size:.82rem;font-weight:700;position:relative;
+.mes-grid{
+  display:grid;
+  grid-template-columns: repeat(5, 70px);
+  justify-content:center;
+  gap:.6rem;
 }
-.md-p{background:var(--mint-l);color:var(--mint-d);}
-.md-f{background:var(--rose-l);color:var(--rose-d);}
-.md-j{background:var(--butter-l);color:#a07000;}
-.md-e{background:transparent;color:var(--muted);}
-.md-today{box-shadow:0 0 0 2px var(--lav-d);}
+
+.mes-day{
+  height:55px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:800;
+  font-size:.9rem;
+  background:#f4f5fb;
+  transition:.2s;
+}
+
+.mes-day-name{
+  text-align:center;
+  font-weight:900;
+  color:#7b7b9d;
+  padding:.4rem;
+}
+
+.md-p{
+  background:#d8ffe4;
+  color:#0f8a43;
+}
+
+.md-f{
+  background:#ffdede;
+  color:#c62828;
+}
+
+.md-j{
+  background:#fff1c9;
+  color:#b77900;
+}
+
+.md-e{
+  background:#f3f4f9;
+  color:#777;
+}
 
 /* ══════════════════════════════════════
    AVISOS
@@ -600,4 +634,95 @@ textarea.form-control{resize:vertical;min-height:75px;}
   .dash-2col,.citas-layout{grid-template-columns:1fr;}
   .calif-grid{grid-template-columns:1fr 1fr;}
   .asist-summary{grid-template-columns:1fr 1fr;}
+}
+
+.asistencia-card{
+  width:100%;
+}
+
+.calendar-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:1.5rem;
+  gap:1rem;
+}
+
+.calendar-actions{
+  display:flex;
+  gap:.6rem;
+}
+
+.btn-cal{
+  padding:.7rem 1rem;
+  border-radius:14px;
+  font-size:1rem;
+}
+
+.mes-grid{
+  width:100%;
+  display:grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap:.8rem;
+}
+
+.mes-day{
+  min-height:75px;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+  font-size:1rem;
+}
+
+
+.week-attendance{
+  display:flex;
+  gap:.6rem;
+  justify-content:center;
+  margin-top:.8rem;
+}
+
+.week-day{
+  flex:1;
+  text-align:center;
+}
+
+.week-status{
+  width:42px;
+  height:42px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 auto .4rem;
+  font-size:.85rem;
+  font-weight:900;
+}
+
+.ws-p{
+  background:var(--mint-l);
+  color:var(--mint-d);
+}
+
+.ws-f{
+  background:var(--rose-l);
+  color:var(--rose-d);
+}
+
+.ws-j{
+  background:var(--butter-l);
+  color:#a07000;
+}
+
+.ws-e{
+  background:#edf0f7;
+  color:#777;
+}
+
+.week-label{
+  font-size:.72rem;
+  font-weight:800;
+  color:var(--muted);
 }

@@ -1281,62 +1281,245 @@ async function cargarAsistenciaAlumno() {
   }
 }
 
+let mesActual = new Date().getMonth();
+let anioActual = new Date().getFullYear();
+function cambiarMes(valor) {
+
+  mesActual += valor;
+
+  if (mesActual > 11) {
+    mesActual = 0;
+    anioActual++;
+  }
+
+  if (mesActual < 0) {
+    mesActual = 11;
+    anioActual--;
+  }
+
+  renderAsistenciaAlumno();
+}
+
 function renderAsistenciaAlumno() {
+
   const grid = document.getElementById('mes-grid');
   if (!grid) return;
-  
+
   grid.innerHTML = '';
-  const days = ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'];
-  
-  // Headers de días
+
+  const meses = [
+    'Enero', 'Febrero', 'Marzo', 'Abril',
+    'Mayo', 'Junio', 'Julio', 'Agosto',
+    'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ];
+
+  // Título
+  const titulo = document.querySelector('#p-asistencia .card-heading');
+
+  if (titulo) {
+    titulo.textContent = `📅 ${meses[mesActual]} ${anioActual}`;
+  }
+
+  // Encabezados
+  const days = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi'];
+
   days.forEach(d => {
     const div = document.createElement('div');
     div.className = 'mes-day-name';
     div.textContent = d;
     grid.appendChild(div);
   });
-  
-  // Días del mes (marzo)
-  const d = new Date();
-  const first = new Date(d.getFullYear(), d.getMonth(), 1).getDay();
-  const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-  
-  for (let i = 0; i < first; i++) {
+
+  // Primer día del mes
+  const firstDay = new Date(anioActual, mesActual, 1);
+
+  // Total de días
+  const daysInMonth = new Date(anioActual, mesActual + 1, 0).getDate();
+
+  // Día de inicio
+  let inicio = firstDay.getDay();
+
+  // Convertir domingo
+  inicio = inicio === 0 ? 7 : inicio;
+
+  // Ajustar para lunes=0
+  inicio = inicio - 1;
+
+  // Si cae sábado o domingo
+  if (inicio > 4) inicio = 0;
+
+  // Espacios vacíos
+  for (let i = 0; i < inicio; i++) {
     const div = document.createElement('div');
     div.className = 'mes-day md-e';
     grid.appendChild(div);
   }
-  
-  // Búsqueda de estado en asistencia
+
+  // Mapear asistencia
   const estadoMap = {};
+
   asistenciaAlumno.forEach(a => {
+
     const fecha = new Date(a.fecha);
-    const día = fecha.getDate();
-    estadoMap[día] = a.estado;
+
+    if (
+      fecha.getMonth() === mesActual &&
+      fecha.getFullYear() === anioActual
+    ) {
+      estadoMap[fecha.getDate()] = a.estado.toLowerCase();
+    }
   });
-  
-  for (let día = 1; día <= daysInMonth; día++) {
+
+  let presentes = 0;
+  let faltas = 0;
+  let justificadas = 0;
+
+  // CONTAR TODOS LOS REGISTROS
+  asistenciaAlumno.forEach(a => {
+
+    const estado = (a.estado || '').toLowerCase();
+
+    if (estado === 'p') {
+      presentes++;
+    }
+    else if (estado === 'f') {
+      faltas++;
+    }
+    else if (estado === 'j') {
+      justificadas++;
+    }
+
+  });
+
+  const total = presentes + faltas + justificadas;
+
+  const porcentaje =
+    total > 0
+      ? Math.round((presentes / total) * 100)
+      : 0;
+
+  document.getElementById('total-presentes').textContent = presentes;
+  document.getElementById('total-faltas').textContent = faltas;
+  document.getElementById('total-justificadas').textContent = justificadas;
+  document.getElementById('porcentaje-asistencia').textContent = `${porcentaje}%`;
+
+  // Renderizar días
+  for (let dia = 1; dia <= daysInMonth; dia++) {
+
+    const fecha = new Date(anioActual, mesActual, dia);
+
+    const diaSemana = fecha.getDay();
+
+    // Saltar sábado y domingo
+    if (diaSemana === 0 || diaSemana === 6) {
+      continue;
+    }
+
     const div = document.createElement('div');
-    const estado = (estadoMap[día] || 'p').toLowerCase();
+
     let className = 'mes-day';
-    let label = día;
-    
+
+    const estado = estadoMap[dia] || '';
+
+    let label = dia;
+
     if (estado === 'p') {
       className += ' md-p';
-      label = 'P';
-    } else if (estado === 'f') {
+      label = `✓ ${dia}`;
+    }
+    else if (estado === 'f') {
       className += ' md-f';
-      label = 'F';
-    } else if (estado === 'j') {
+      label = `✗ ${dia}`;
+    }
+    else if (estado === 'j') {
       className += ' md-j';
-      label = 'J';
-    } else {
+      label = `J ${dia}`;
+    }
+    else {
       className += ' md-e';
     }
-    
+
     div.className = className;
     div.textContent = label;
+
     grid.appendChild(div);
+  }
+}
+
+function renderAsistenciaSemana() {
+
+  const container = document.getElementById('week-attendance');
+
+  if (!container) return;
+
+  container.innerHTML = '';
+
+  const nombres = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+  const hoy = new Date();
+
+  // Obtener lunes
+  const lunes = new Date(hoy);
+
+  const dia = hoy.getDay();
+
+  const diff = dia === 0 ? -6 : 1 - dia;
+
+  lunes.setDate(hoy.getDate() + diff);
+
+  // Renderizar lunes-viernes
+  for (let i = 0; i < 5; i++) {
+
+    const fecha = new Date(lunes);
+
+    fecha.setDate(lunes.getDate() + i);
+
+    const fechaStr = fecha.toISOString().split('T')[0];
+
+    // Buscar asistencia
+    const registro = asistenciaAlumno.find(a => {
+
+      const f = new Date(a.fecha).toISOString().split('T')[0];
+
+      return f === fechaStr;
+
+    });
+
+    let estado = '';
+    let letra = '—';
+    let clase = 'ws-e';
+
+    if (registro) {
+
+      estado = (registro.estado || '').toLowerCase();
+
+      if (estado === 'p') {
+        letra = 'P';
+        clase = 'ws-p';
+      }
+      else if (estado === 'f') {
+        letra = 'F';
+        clase = 'ws-f';
+      }
+      else if (estado === 'j') {
+        letra = 'J';
+        clase = 'ws-j';
+      }
+    }
+
+    container.innerHTML += `
+      <div class="week-day">
+
+        <div class="week-status ${clase}">
+          ${letra}
+        </div>
+
+        <div class="week-label">
+          ${nombres[fecha.getDay()]}
+        </div>
+
+      </div>
+    `;
   }
 }
 

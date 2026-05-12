@@ -1,5 +1,4 @@
 const pool = require("../DB/conexion");
-const db = require("../Config/db");
 
 async function getAlumnos() {
   const [rows] = await pool.query(
