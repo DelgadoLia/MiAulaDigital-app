@@ -150,7 +150,6 @@
 
       <div>
         <div class="card" style="margin-bottom:1rem;">
-          <div class="card-heading">📢 Avisos recientes</div>
           <div class="aviso-mini">
             <div class="aviso-mini-icon" style="background:var(--lav-l);">📅</div>
             <div>
@@ -291,7 +290,8 @@
         <div class="asist-lbl">Porcentaje</div>
       </div>
     </div>
-    <div class="card asistencia-card">
+  
+  <div class="card asistencia-card">
 
   <div class="calendar-header">
 
@@ -321,29 +321,18 @@
       <div style="width:14px;height:14px;border-radius:4px;background:var(--butter-l);"></div>Justificada
     </div>
   </div>
+</div>
+  </div>
 
   <!-- ══ AVISOS ══ -->
-  const avisos = [
-  {titulo:'Junta mensual de padres',cat:'📅 Evento',chip:'ac-ev',icon:'📅',bg:'abi-purple',texto:'Se les cita el próximo viernes 20 de marzo a las 5:00 PM en el aula de 3°B para tratar temas académicos y conductuales del bimestre.',fecha:'14 mar 2026',nuevo:true},
-  {titulo:'Cooperación material didáctico',cat:'💰 Cooperación',chip:'ac-co',icon:'💰',bg:'abi-amber',texto:'Se solicita una cooperación voluntaria de $50 para material de manualidades del proyecto de arte que presentaremos el mes de abril.',fecha:'12 mar 2026',nuevo:true},
-  {titulo:'Semana de exámenes bimestrales',cat:'📋 Información',chip:'ac-in',icon:'📋',bg:'abi-blue',texto:'Los exámenes del 2do bimestre se realizarán del 25 al 29 de marzo. Se recomienda repasar los temas vistos en clase.',fecha:'10 mar 2026',nuevo:false},
-  {titulo:'Día del niño — actividades especiales',cat:'🎉 Evento',chip:'ac-ev',icon:'🎉',bg:'abi-rose',texto:'El 30 de abril celebraremos el Día del Niño con actividades recreativas, juegos y una pequeña convivencia. ¡No faltes!',fecha:'5 mar 2026',nuevo:false},
-  ];
-  (function renderAvisos(){
-    document.getElementById('avisos-container').innerHTML = avisos.map(a=>`
-      <div class="aviso-full-card">
-        <div class="aviso-badge-icon ${a.bg}">${a.icon}</div>
-        <div class="aviso-full-body">
-          <div class="aviso-full-title">${a.titulo} ${a.nuevo?'<span class="new-badge">NUEVO</span>':''}</div>
-          <div class="aviso-full-text">${a.texto}</div>
-          <div class="aviso-full-meta">
-            <span class="aviso-date-txt">📅 ${a.fecha}</span>
-            <span class="aviso-chip ${a.chip}">${a.cat}</span>
-          </div>
-        </div>
-      </div>`).join('');
-  })();
+    <div class="page" id="p-avisos">
+    <div class="section-desc">
+      Comunicados del maestro
+    </div>
 
+    <div id="avisos-container"></div>
+
+  </div>
 
   <!-- ══ CHAT ══ -->
   <div class="page" id="p-chat">

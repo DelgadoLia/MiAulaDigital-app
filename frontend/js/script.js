@@ -523,6 +523,7 @@ async function deleteObs(id, btn) {
 //  AVISOS
 // ═══════════════════════════════════════════════════════
 async function cargarAvisos() {
+  console.log('Cargando avisos...');
   try {
     avisos = await apiFetch('/avisos');
     renderAvisos();
@@ -532,7 +533,9 @@ async function cargarAvisos() {
 async function cargarAvisosAlumno() {
   try {
     avisos = await apiFetch('/avisos');
-  } catch { avisos = []; }
+    console.log('Avisos cargados:', avisos);
+    renderAvisosAlumno();
+  } catch(err) { console.log(err) ;}
 }
 
 const avisoIcons = ['📅','💰','📋','⚠'];
@@ -554,6 +557,84 @@ function renderAvisos() {
       </div>
       <button class="btn-icon" style="align-self:flex-start;" onclick="deleteAviso(${av.id},this)">🗑️</button>
     </div>`).join('');
+}
+
+function renderAvisosAlumno() {
+  console.log('Renderizando avisos');
+  const el =
+    document.getElementById(
+      'avisos-container'
+    );
+
+  if (!el) return;
+
+  const avisoIcons = {
+    '📅 Evento':'📅',
+    '💰 Cooperación':'💰',
+    '📋 Información':'📋',
+    '⚠ Urgente':'⚠'
+  };
+
+  const avisoColors = {
+    '📅 Evento':'abi-purple',
+    '💰 Cooperación':'abi-amber',
+    '📋 Información':'abi-blue',
+    '⚠ Urgente':'abi-rose'
+  };
+
+  el.innerHTML = avisos.map(av => `
+
+    <div class="aviso-full-card">
+
+      <div class="
+        aviso-badge-icon
+        ${avisoColors[av.categoria] || 'abi-blue'}
+      ">
+
+        ${avisoIcons[av.categoria] || '📋'}
+
+      </div>
+
+      <div class="aviso-full-body">
+
+        <div class="aviso-full-title">
+          ${av.titulo}
+        </div>
+
+        <div class="aviso-full-text">
+          ${av.contenido}
+        </div>
+
+        <div class="aviso-full-meta">
+
+          <span class="aviso-date-txt">
+
+            📅
+            ${new Date(av.fecha)
+              .toLocaleDateString(
+                'es-MX',
+                {
+                  day:'numeric',
+                  month:'short',
+                  year:'numeric'
+                }
+              )
+            }
+
+          </span>
+
+          <span class="aviso-chip">
+            ${av.categoria}
+          </span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  `).join('');
+
 }
 
 async function publishAviso() {
@@ -998,12 +1079,13 @@ async function iniciarPanelAlumno() {
     cargarCalificacionesAlumno(),
     cargarAsistenciaAlumno(),
     cargarCitas(),
-    cargarAvisosAlumno(),
+    cargarAvisosAlumno()
   ]);
   
   // Renderizar el home con todos los datos dinámicos
   renderHomeAlumno();
   renderCalificacionesPanel();
+  renderAvisosAlumno();
   setFechaHoy();
 }
 
@@ -1161,31 +1243,80 @@ function renderMateriasHome() {
 }
 
 function renderAvisosRecientes() {
-  const avisosMinis = document.querySelectorAll('#p-home .card .aviso-mini');
-  const avisosRecientes = avisos.slice(0, 3); // Primeros 3 avisos
-  
+
+  const avisosMinis =
+    document.querySelectorAll(
+      '#p-home .aviso-mini'
+    );
+
+  const avisosRecientes = avisos.slice(0, 3);
+
+  const iconos = {
+    '📅 Evento': '📅',
+    '💰 Cooperación': '💰',
+    '📋 Información': '📋',
+    '⚠ Urgente': '⚠'
+  };
+
+  const colores = {
+    '📅 Evento': 'var(--lav-l)',
+    '💰 Cooperación': 'var(--butter-l)',
+    '📋 Información': 'var(--mint-l)',
+    '⚠ Urgente': 'var(--rose-l)'
+  };
+
   avisosMinis.forEach((mini, i) => {
-    if (avisosRecientes[i]) {
-      const av = avisosRecientes[i];
-      const titulo = mini.querySelector('.aviso-mini-text');
-      const fecha = mini.querySelector('.aviso-mini-date');
-      
-      if (titulo) titulo.textContent = av.titulo || av.contenido.substring(0, 40);
-      if (fecha) {
-        const fechaObj = new Date(av.fecha);
-        const ahora = new Date();
-        const diffTime = Math.abs(ahora - fechaObj);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        fecha.textContent = diffDays === 0 ? 'hoy' : 'hace ' + diffDays + ' día' + (diffDays > 1 ? 's' : '');
-      }
-    } else {
-      // Limpiar si no hay avisos
-      const titulo = mini.querySelector('.aviso-mini-text');
-      const fecha = mini.querySelector('.aviso-mini-date');
-      if (titulo) titulo.textContent = '—';
-      if (fecha) fecha.textContent = '—';
+
+    const av = avisosRecientes[i];
+
+    const icon =
+      mini.querySelector('.aviso-mini-icon');
+
+    const titulo =
+      mini.querySelector('.aviso-mini-text');
+
+    const fecha =
+      mini.querySelector('.aviso-mini-date');
+
+    if (!av) {
+
+      if (titulo) titulo.textContent = 'Sin avisos';
+      if (fecha) fecha.textContent = '';
+
+      return;
     }
+
+    // ICONO
+    if (icon) {
+
+      icon.textContent =
+        iconos[av.categoria] || '📋';
+
+      icon.style.background =
+        colores[av.categoria] || 'var(--lav-l)';
+    }
+
+    // TITULO
+    if (titulo) {
+      titulo.textContent = av.titulo;
+    }
+
+    // FECHA
+    if (fecha) {
+
+      fecha.textContent =
+        new Date(av.fecha)
+          .toLocaleDateString(
+            'es-MX',
+            {
+              day:'numeric',
+              month:'short'
+            }
+          );
+    }
+
   });
+
 }
 
 function renderAsistenciaSemana() {
