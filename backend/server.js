@@ -6,6 +6,7 @@ const citaRutas = require('./Rutas/citaRutas');
 const alumnoRutas = require("./Rutas/alumnoRutas");
 const avisoRuta = require('./Rutas/avisoRuta');
 const mensajeRutas = require('./Rutas/mensajeRutas');
+const aseoRutas = require('./Rutas/aseoRutas');
 const app = express();
 
 app.use(cors());
@@ -21,6 +22,7 @@ app.use('/api/citas', citaRutas);
 app.use("/api/alumnos", alumnoRutas);
 app.use('/api/avisos', avisoRuta);
 app.use('/api/mensajes', mensajeRutas);
+app.use('/api/aseo', aseoRutas);
 
 app.get("/", (req, res) => {
   res.json({ mensaje: "Mi Aula Digital API funcionando" });

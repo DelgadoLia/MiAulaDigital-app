@@ -724,6 +724,38 @@ textarea.form-control{resize:vertical;min-height:75px;}
 }
 .cc-conf{background:var(--mint-l);color:var(--mint-d);}
 .cc-pend{background:var(--butter-l);color:#a07000;}
+.cal-d{
+  min-height:70px;
+  padding:.35rem;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:flex-start;
+}
+
+.cal-num{
+  font-weight:800;
+  font-size:.85rem;
+}
+
+.cal-mini-msg{
+  margin-top:.25rem;
+  font-size:.58rem;
+  line-height:1.1;
+  font-weight:700;
+  overflow:hidden;
+}
+
+.cita-confirmada{
+  background:var(--mint-l);
+  border:2px solid rgba(92,191,153,.35);
+  color:var(--mint-d);
+}
+
+.cita-pendiente{
+  background:var(--butter-l);
+  border:2px solid rgba(255,193,7,.35);
+  color:#9a6a00;
+}
 
 /* ══════════════════════════════════════
    SCROLLBAR

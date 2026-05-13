@@ -205,6 +205,7 @@ let asistData = {};
 let aseoRol   = {};
 let chatConversaciones = [];
 let mesnajes = [];
+let aseoData = [];
 let currentChat = 0;
 
 const aseoActividades = ['Barrer','Trapear','Limpiar pizarrón','Organizar pupitres','Recoger basura'];
@@ -904,9 +905,7 @@ function renderCal() {
   
   // Crea un mapa de citas por día para el mes actual
   const citasPorDia = {};
-  citas
-    .filter(c => c.estado === 'confirmada')
-    .forEach(c => {
+  citas.forEach(c => {
       const fechaCita = new Date(c.fecha+'T12:00');
       if (fechaCita.getFullYear() === calYear && fechaCita.getMonth() === calMonth) {
         const dia = fechaCita.getDate();
@@ -919,9 +918,51 @@ function renderCal() {
   const today = new Date();
   for (let d=1; d<=days; d++) {
     const isToday = d===today.getDate() && calMonth===today.getMonth() && calYear===today.getFullYear();
-    const hasCita = citasPorDia[d] && citasPorDia[d].length > 0;
-    const motivo = hasCita ? citasPorDia[d][0].motivo?.substring(0, 20) + '...' : '';
-    g.innerHTML += `<div class="cal-d${isToday?' today':''}${hasCita?' has-cita':''}" data-cita="${motivo}">${d}</div>`;
+    const citasDia = citasPorDia[d] || [];
+
+    let claseEstado = '';
+    let textoMotivo = '';
+
+    if (citasDia.length > 0) {
+
+      const cita = citasDia[0];
+
+      textoMotivo =
+        (cita.motivo || '')
+          .substring(0, 18);
+
+      if (cita.estado === 'confirmada') {
+        claseEstado = ' cita-confirmada';
+      }
+      else {
+        claseEstado = ' cita-pendiente';
+      }
+
+    }
+
+    g.innerHTML += `
+
+      <div class="
+        cal-d
+        ${isToday ? 'today' : ''}
+        ${claseEstado}
+      ">
+
+        <div class="cal-num">
+          ${d}
+        </div>
+
+        ${
+          textoMotivo
+          ? `<div class="cal-mini-msg">
+              ${textoMotivo}
+            </div>`
+          : ''
+        }
+
+      </div>
+
+    `;
   }
 }
 
@@ -946,32 +987,136 @@ function addSlot() {
 // ═══════════════════════════════════════════════════════
 //  ASEO — solo frontend
 // ═══════════════════════════════════════════════════════
-function shuffleAseo() {
-  const shuffled = [...alumnos].sort(() => Math.random()-.5);
-  aseoRol = {};
-  diasSemana.forEach((d,i) => {
-    aseoRol[d] = aseoActividades.map((act,j) => ({
-      act, alumno: shuffled[(i*5+j) % (shuffled.length||1)]?.nombre || '—'
-    }));
+async function shuffleAseo() {
+
+  const shuffled =
+    [...alumnos]
+    .sort(() => Math.random() - .5);
+
+  const data = [];
+
+  diasSemana.forEach((d, i) => {
+
+    aseoActividades.forEach((act, j) => {
+
+      data.push({
+
+        dia: d,
+
+        actividad: act,
+
+        alumno:
+          shuffled[
+            (i * 5 + j)
+            % shuffled.length
+          ]?.nombre || '—',
+
+        numero: j + 1
+
+      });
+
+    });
+
   });
-  renderAseo();
+
+  try {
+
+    await apiFetch('/aseo', {
+
+      method:'POST',
+
+      body: JSON.stringify(data)
+
+    });
+
+    cargarAseo();
+
+    mostrarToast(
+      '🧹 Rol actualizado'
+    );
+
+  } catch (err) {
+
+    console.log(err);
+  }
 }
+
+async function cargarAseo() {
+
+  try {
+
+    aseoData =
+      await apiFetch('/aseo');
+
+    renderAseo();
+
+    renderAseoAlumno();
+
+  } catch (err) {
+
+    console.log(err);
+  }
+}
+
 function renderAseo() {
-  const el = document.getElementById('aseo-grid');
+
+  const el =
+    document.getElementById('aseo-grid');
+
   if (!el) return;
-  el.innerHTML = diasSemana.map(d => `
+
+  const dias =
+    [...new Set(
+      aseoData.map(a => a.dia)
+    )];
+
+  el.innerHTML = dias.map(d => `
+
     <div class="aseo-day-card">
-      <div class="aseo-day-title">📅 ${d}</div>
-      ${(aseoRol[d]||[]).map((r,i) => `
-        <div class="aseo-student-row">
-          <div class="aseo-dot" style="background:${['#5cbf99','#f5965a','#f07090','#9b7ee8','#60b8f0'][i]};"></div>
-          <div>
-            <div style="font-size:.82rem;font-weight:800;">${r.alumno.split(' ')[0]}</div>
-            <div style="font-size:.72rem;color:var(--muted);font-weight:700;">${r.act}</div>
+
+      <div class="aseo-day-title">
+        📅 ${d}
+      </div>
+
+      ${
+        aseoData
+        .filter(a => a.dia === d)
+        .map(r => `
+
+          <div class="aseo-student-row">
+
+            <div class="aseo-dot"></div>
+
+            <div>
+
+              <div style="
+                font-size:.82rem;
+                font-weight:800;
+              ">
+                ${r.alumno}
+              </div>
+
+              <div style="
+                font-size:.72rem;
+                color:var(--muted);
+              ">
+                ${r.actividad}
+              </div>
+
+            </div>
+
+            <span class="aseo-num">
+              ${r.numero}
+            </span>
+
           </div>
-          <span class="aseo-num">${i+1}</span>
-        </div>`).join('')}
-    </div>`).join('');
+
+        `).join('')
+      }
+
+    </div>
+
+  `).join('');
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1063,6 +1208,7 @@ async function iniciarPanelAlumno() {
     cargarCitas(),
     cargarAvisosAlumno(),
     cargarMensajes(),
+    cargarAseo(),
   ]);
   
   // Renderizar el home con todos los datos dinámicos
@@ -1705,35 +1851,89 @@ function showToast(msg) {
 
 // Rol de Aseo para Alumno (solo lectura)
 function renderAseoAlumno() {
-  const el = document.getElementById('aseo-grid-alumno');
+
+  const el =
+    document.getElementById(
+      'aseo-grid-alumno'
+    );
+
   if (!el) return;
-  
-  const diasSemana = ['Lunes','Martes','Miércoles','Jueves','Viernes'];
-  const aseoActividades = ['Barrer','Trapear','Limpiar pizarrón','Organizar pupitres','Recoger basura'];
-  const nombre = alumnoActual.nombre.split(' ')[0]; // Solo primer nombre
-  
-  // Buscar en qué días aparece el alumno en el aseo (esto es simulado)
-  // En producción, esto vendría del backend
-  const diasAsignados = [];
-  
-  el.innerHTML = diasSemana.map((d, i) => `
+
+  const dias =
+    [...new Set(
+      aseoData.map(a => a.dia)
+    )];
+
+  el.innerHTML = dias.map(d => `
+
     <div class="aseo-day-card">
-      <div class="aseo-day-title">📅 ${d}</div>
-      ${aseoActividades.map((act, j) => {
-        const colors = ['#5cbf99','#f5965a','#f07090','#9b7ee8','#60b8f0'];
-        return `
-          <div class="aseo-student-row">
-            <div class="aseo-dot" style="background:${colors[j]};"></div>
+
+      <div class="aseo-day-title">
+        📅 ${d}
+      </div>
+
+      ${
+        aseoData
+        .filter(a => a.dia === d)
+        .map((r, i) => `
+
+          <div class="
+            aseo-student-row
+            ${
+              r.alumno === alumnoActual.nombre
+              ? 'aseo-mio'
+              : ''
+            }
+          ">
+
+            <div
+              class="aseo-dot"
+              style="
+                background:
+                ${
+                  [
+                    '#5cbf99',
+                    '#f5965a',
+                    '#f07090',
+                    '#9b7ee8',
+                    '#60b8f0'
+                  ][i % 5]
+                };
+              "
+            ></div>
+
             <div>
-              <div style="font-size:.82rem;font-weight:800;">${nombre}</div>
-              <div style="font-size:.72rem;color:var(--muted);font-weight:700;">${act}</div>
+
+              <div style="
+                font-size:.82rem;
+                font-weight:800;
+              ">
+                ${r.alumno}
+              </div>
+
+              <div style="
+                font-size:.72rem;
+                color:var(--muted);
+                font-weight:700;
+              ">
+                ${r.actividad}
+              </div>
+
             </div>
-            <span class="aseo-num">${j+1}</span>
+
+            <span class="aseo-num">
+              ${r.numero}
+            </span>
+
           </div>
-        `;
-      }).join('')}
+
+        `).join('')
+      }
+
     </div>
+
   `).join('');
+
 }
 
 // Logout
