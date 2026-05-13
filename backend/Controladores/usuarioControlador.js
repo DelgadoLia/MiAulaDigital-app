@@ -94,6 +94,7 @@ async function loginPadre(req, res) {
       alumno:   resultado.alumnoNombre,
       alumnoId: resultado.alumnoId,
       tutor:    resultado.nombreCompleto,
+      usuarioId: resultado.id
     });
 
   } catch (error) {

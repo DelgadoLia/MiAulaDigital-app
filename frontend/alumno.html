@@ -337,19 +337,28 @@
   <!-- ══ CHAT ══ -->
   <div class="page" id="p-chat">
     <div class="chat-wrap">
+
       <div class="chat-top">
         <div class="chat-top-av">👩‍🏫</div>
-        <div>
-          <div class="chat-top-name">Mtro. Hector</div>
+        <div class="chat-top-info">                          
+          <div class="chat-top-name">Mtro. Héctor</div>
           <div class="chat-top-sub">Docente del grupo 3°B</div>
         </div>
-        <div class="online-pill"><div class="online-dot2"></div></div>
+        <div class="online-pill">
+          <div class="online-dot2"></div>
+                           
+        </div>
       </div>
+
       <div class="msgs-area" id="msgs-area"></div>
+
       <div class="chat-input-row">
-        <input class="chat-input" type="text" id="chat-in" placeholder="Escribe un mensaje para el maestro... 😊" onkeydown="if(event.key==='Enter')sendMsg()">
+        <input class="chat-input" type="text" id="chat-in"
+          placeholder="Escribe un mensaje para el maestro... 😊"
+          onkeydown="if(event.key==='Enter')sendMsg()">
         <button class="btn-send" onclick="sendMsg()">➤</button>
       </div>
+
     </div>
   </div>
 
@@ -363,10 +372,6 @@
         <div class="cal-card" style="margin-bottom:1.2rem;">
           <div class="cal-header">
             <span class="cal-month-lbl" id="c-month-lbl">Marzo 2026</span>
-            <div style="display:flex;gap:.4rem;">
-              <button class="cal-nav-btn" onclick="chMes(-1)">‹</button>
-              <button class="cal-nav-btn" onclick="chMes(1)">›</button>
-            </div>
           </div>
           <div class="cal-grid" id="c-cal-grid"></div>
         </div>

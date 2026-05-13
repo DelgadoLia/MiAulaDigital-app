@@ -124,7 +124,7 @@ async function loginDocente() {
   } catch { showError('⚠ No se pudo conectar con el servidor.'); }
 }
 
-// ── LOGIN PADRE → backend real
+// ── LOGIN PADRE backend real
 async function loginPadre() {
   const nombre   = document.getElementById('alumno-nombre').value.trim();
   const fechaNac = document.getElementById('alumno-fecha').value;
@@ -140,6 +140,7 @@ async function loginPadre() {
     localStorage.setItem('token',    data.token);
     localStorage.setItem('alumno',   data.alumno);
     localStorage.setItem('alumnoId', data.alumnoId);
+    localStorage.setItem('usuarioId',data.usuarioId);
     localStorage.setItem('tutor',    data.tutor);
     localStorage.setItem('rol',      'padre');
     closeModal();
@@ -203,6 +204,7 @@ let citas     = [];
 let asistData = {};
 let aseoRol   = {};
 let chatConversaciones = [];
+let mesnajes = [];
 let currentChat = 0;
 
 const aseoActividades = ['Barrer','Trapear','Limpiar pizarrón','Organizar pupitres','Recoger basura'];
@@ -721,26 +723,6 @@ function renderMessages() {
   el.scrollTop = el.scrollHeight;
 }
 
-async function sendMsg() {
-  const inp  = document.getElementById('chat-input');
-  const txt  = inp?.value.trim();
-  if (!txt) return;
-  const conv = chatConversaciones[currentChat];
-  if (!conv) return;
-  try {
-    await apiFetch('/mensajes', {
-      method: 'POST',
-      body:   JSON.stringify({ receptorId: conv.usuarioId, contenido: txt }),
-    });
-    const hora = new Date().toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
-    if (!conv.msgs) conv.msgs = [];
-    conv.msgs.push({ mine:true, contenido:txt, hora });
-    conv.ultimoMensaje = txt;
-    inp.value = '';
-    renderMessages(); renderContacts();
-  } catch (err) { mostrarToast('❌ '+err.message); }
-}
-
 // ═══════════════════════════════════════════════════════
 //  CITAS
 // ═══════════════════════════════════════════════════════
@@ -1079,7 +1061,8 @@ async function iniciarPanelAlumno() {
     cargarCalificacionesAlumno(),
     cargarAsistenciaAlumno(),
     cargarCitas(),
-    cargarAvisosAlumno()
+    cargarAvisosAlumno(),
+    cargarMensajes(),
   ]);
   
   // Renderizar el home con todos los datos dinámicos
@@ -1848,4 +1831,113 @@ function obtenerMensajeCalificacion(cal) {
     return "⚠️ Puede mejorar";
 
   return "❌ Requiere apoyo";
+}
+
+async function cargarMensajes() {
+
+  try {
+
+    mensajes = await apiFetch(
+      `/mensajes/${localStorage.getItem('usuarioId')}`
+    );
+
+    renderMensajes();
+
+  } catch (err) {
+
+    console.log(err);
+  }
+}
+
+function renderMensajes() {
+
+  const area =
+    document.getElementById('msgs-area');
+
+  if (!area) return;
+
+  area.innerHTML = mensajes.map(m => {
+
+    const esMio =
+      m.remitenteId === parseInt(
+        localStorage.getItem('usuarioId')
+      );
+
+    return `
+
+      <div class="
+        ${esMio ? 'msg-me' : 'msg-other'}
+      ">
+
+        <div class="msg-bubble">
+
+          ${m.contenido}
+
+          <div class="msg-time">
+
+            ${
+              new Date(m.fecha)
+              .toLocaleTimeString(
+                'es-MX',
+                {
+                  hour:'2-digit',
+                  minute:'2-digit'
+                }
+              )
+            }
+
+          </div>
+
+        </div>
+
+      </div>
+    `;
+  }).join('');
+
+  area.scrollTop =
+    area.scrollHeight;
+}
+
+async function sendMsg() {
+
+  const input =
+    document.getElementById('chat-in');
+
+  const texto =
+    input.value.trim();
+
+  if (!texto) return;
+
+  try {
+
+    await apiFetch('/mensajes', {
+
+      method:'POST',
+
+      body: JSON.stringify({
+
+        remitenteId:
+        parseInt(
+          localStorage.getItem('usuarioId')
+        ),
+
+        receptorId: 1,
+
+        contenido: texto
+
+      })
+    });
+
+    input.value = '';
+
+    await cargarMensajes();
+
+  } catch (err) {
+
+    console.log(err);
+
+    mostrarToast(
+      '❌ Error enviando mensaje'
+    );
+  }
 }
