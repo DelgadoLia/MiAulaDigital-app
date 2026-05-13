@@ -414,10 +414,6 @@ function renderAsistencia() {
       <td style="color:var(--muted);font-size:.78rem;">${String(i+1).padStart(2,'0')}</td>
       <td style="font-size:.84rem;font-weight:600;">${a.nombre}</td>
       ${semDias}${hoyBtn}
-      <td>
-        <span class="resumen-pill" style="background:rgba(92,191,153,0.15);color:#5cbf99;">✓ ${presentes}</span>
-        <span class="resumen-pill" style="background:rgba(240,112,144,0.12);color:#f07090;margin-left:.3rem;">✗ ${faltas}</span>
-      </td>
     </tr>`;
   }).join('');
 }
