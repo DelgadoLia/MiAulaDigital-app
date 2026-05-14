@@ -6,6 +6,11 @@ const controlador =
   require('../Controladores/mensajeControlador');
 
 router.get(
+  '/conversaciones', 
+  controlador.obtenerConversaciones
+);
+
+router.get(
   '/:id',
   controlador.obtenerMensajes
 );

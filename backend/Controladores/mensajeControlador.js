@@ -1,23 +1,13 @@
 const modelo = require('../Modelo/mensajeModelo');
 
 const obtenerMensajes = async (req, res) => {
-
   try {
-
-    const alumnoId = req.params.id;
-
-    const mensajes =
-      await modelo.obtenerMensajes(alumnoId);
-
+    const id = req.params.id;
+    const mensajes = await modelo.obtenerMensajes(id);
     res.json(mensajes);
-
   } catch (err) {
-
     console.log(err);
-
-    res.status(500).json({
-      error:'Error obteniendo mensajes'
-    });
+    res.status(500).json({ error: 'Error obteniendo mensajes' });
   }
 };
 
@@ -51,7 +41,14 @@ const enviarMensaje = async (req, res) => {
   }
 };
 
-module.exports = {
-  obtenerMensajes,
-  enviarMensaje
+const obtenerConversaciones = async (req, res) => {
+  try {
+    const conversaciones = await modelo.obtenerConversaciones();
+    res.json(conversaciones);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: 'Error obteniendo conversaciones' });
+  }
 };
+
+module.exports = { obtenerMensajes, enviarMensaje, obtenerConversaciones };

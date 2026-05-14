@@ -805,40 +805,64 @@ async function cargarChatsDocente() {
     chatConversaciones = await apiFetch('/mensajes/conversaciones');
     renderContacts();
     if (chatConversaciones.length) await selectChat(0);
-  } catch { chatConversaciones = []; renderContacts(); }
+  } catch (err) {
+    console.log(err);
+    chatConversaciones = [];
+    renderContacts();
+  }
 }
 
 function renderContacts() {
   const el = document.getElementById('chat-contacts');
   if (!el) return;
-  el.innerHTML = chatConversaciones.map((c,i) => `
-    <div class="contact-item ${i===currentChat?'active':''}" onclick="selectChat(${i})">
-      <div class="contact-av ${c.av||'av2'}">${c.initials||c.nombre?.[0]||'?'}</div>
-      <div class="contact-info">
-        <div class="contact-name">${c.nombre}</div>
-        <div class="contact-preview">${c.ultimoMensaje||''}</div>
-      </div>
-      <div class="contact-meta">
-        <div class="contact-time">${c.hora||''}</div>
-        ${c.noLeidos?`<div class="unread-badge">${c.noLeidos}</div>`:''}
-      </div>
-    </div>`).join('');
+  el.innerHTML = chatConversaciones.map((c, i) => {
+    const iniciales = c.nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    const tieneMsg  = c.ultimoMensaje;
+    const noLeidos  = parseInt(c.noLeidos) || 0;
+    const hora      = c.ultimaFecha
+      ? new Date(c.ultimaFecha).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+      : '';
+
+    return `
+      <div class="contact-item ${i === currentChat ? 'active' : ''}" onclick="selectChat(${i})">
+        <div class="contact-av av${(i % 5) + 1}" style="position:relative;">
+          ${iniciales}
+          ${tieneMsg ? `<div style="position:absolute;bottom:0;right:0;width:10px;height:10px;background:#5cbf99;border-radius:50%;border:2px solid white;"></div>` : ''}
+        </div>
+        <div class="contact-info">
+          <div class="contact-name">${c.nombre}</div>
+          <div class="contact-preview" style="font-size:.75rem;color:var(--muted);">
+            🧒 ${c.alumnoNombre || ''}
+            ${tieneMsg ? `· ${c.ultimoMensaje.substring(0, 28)}...` : '· Sin mensajes'}
+          </div>
+        </div>
+        <div class="contact-meta">
+          <div class="contact-time">${hora}</div>
+          ${noLeidos > 0 ? `<div class="unread-badge">${noLeidos}</div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
 }
 
 async function selectChat(i) {
   currentChat = i;
   const c = chatConversaciones[i];
+  const iniciales = c.nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
   const hdr = document.getElementById('chat-header');
   if (hdr) hdr.innerHTML = `
-    <div class="contact-av ${c.av||'av2'}">${c.initials||c.nombre?.[0]}</div>
+    <div class="contact-av av${(i % 5) + 1}">${iniciales}</div>
     <div class="chat-header-info">
       <div class="chat-header-name">${c.nombre}</div>
-      <div class="chat-header-sub">Padre/Tutor · 3°B</div>
+      <div class="chat-header-sub">Tutor de ${c.alumnoNombre} · 3°B</div>
     </div>`;
+
   try {
     c.msgs = await apiFetch(`/mensajes/${c.usuarioId}`);
   } catch { c.msgs = []; }
-  renderMessages(); renderContacts();
+
+  renderMessages();
+  renderContacts();
 }
 
 function renderMessages() {
@@ -846,16 +870,22 @@ function renderMessages() {
   if (!conv) return;
   const el = document.getElementById('chat-messages');
   if (!el) return;
-  el.innerHTML = (conv.msgs||[]).map(m => {
-    const isMine = m.mine || false;
-    return `<div class="msg ${isMine?'mine':''}">
-      <div class="msg-av ${isMine?'mine-av':conv.av||'av2'}">${isMine?'ML':conv.initials||'?'}</div>
-      <div>
-        <div class="bubble">${m.contenido||m.text||''}</div>
-        <div class="msg-time">${m.hora||''}</div>
-      </div>
-    </div>`;
+
+  const iniciales = conv.nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+  el.innerHTML = (conv.msgs || []).map(m => {
+    const isMine = m.remitenteId === 1; // ID del docente
+    const hora   = new Date(m.fecha).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+    return `
+      <div class="msg ${isMine ? 'mine' : ''}">
+        <div class="msg-av ${isMine ? 'mine-av' : ''}">${isMine ? 'HD' : iniciales}</div>
+        <div class="msg-body">
+          <div class="bubble">${m.contenido || ''}</div>
+          <div class="msg-time">${hora}</div>
+        </div>
+      </div>`;
   }).join('');
+
   el.scrollTop = el.scrollHeight;
 }
 
@@ -2297,45 +2327,67 @@ function renderMensajes() {
 }
 
 async function sendMsg() {
+  const pagina = window.location.pathname;
 
-  const input =
-    document.getElementById('chat-in');
+  if (pagina.includes('docente.html')) {
+    // Envío del docente
+    const input = document.getElementById('chat-input');
+    const texto = input.value.trim();
+    if (!texto) return;
 
-  const texto =
-    input.value.trim();
+    const conv = chatConversaciones[currentChat];
+    if (!conv) return;
 
-  if (!texto) return;
+    const hora = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+    const el   = document.getElementById('chat-messages');
 
-  try {
-
-    await apiFetch('/mensajes', {
-
-      method:'POST',
-
-      body: JSON.stringify({
-
-        remitenteId:
-        parseInt(
-          localStorage.getItem('usuarioId')
-        ),
-
-        receptorId: 1,
-
-        contenido: texto
-
-      })
-    });
-
+    el.insertAdjacentHTML('beforeend', `
+      <div class="msg mine">
+        <div class="msg-av mine-av">HD</div>
+        <div class="msg-body">
+          <div class="bubble">${texto}</div>
+          <div class="msg-time">${hora}</div>
+        </div>
+      </div>
+    `);
+    el.scrollTop = el.scrollHeight;
     input.value = '';
 
-    await cargarMensajes();
+    try {
+      await apiFetch('/mensajes', {
+        method: 'POST',
+        body: JSON.stringify({
+          remitenteId: 1,
+          receptorId: conv.usuarioId,
+          contenido: texto
+        })
+      });
+      conv.ultimoMensaje = texto;
+      renderContacts();
+    } catch {
+      mostrarToast('❌ Error enviando mensaje');
+    }
 
-  } catch (err) {
+  } else {
+    // Envío del alumno
+    const input = document.getElementById('chat-in');
+    const texto = input.value.trim();
+    if (!texto) return;
 
-    console.log(err);
-
-    mostrarToast(
-      '❌ Error enviando mensaje'
-    );
+    try {
+      await apiFetch('/mensajes', {
+        method: 'POST',
+        body: JSON.stringify({
+          remitenteId: parseInt(localStorage.getItem('usuarioId')),
+          receptorId: 1,
+          contenido: texto
+        })
+      });
+      input.value = '';
+      await cargarMensajes();
+    } catch (err) {
+      console.log(err);
+      mostrarToast('❌ Error enviando mensaje');
+    }
   }
 }
