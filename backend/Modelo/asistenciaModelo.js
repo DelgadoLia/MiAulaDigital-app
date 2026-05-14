@@ -40,9 +40,25 @@ async function registrarAsistenciaMasiva(registros, fecha) {
   return result;
 }
 
+async function getResumenAsistenciaTodos() {
+  const sql = `
+    SELECT 
+      alumnoId,
+      COUNT(*) AS total,
+      SUM(estado = 'P') AS presentes,
+      SUM(estado = 'F') AS faltas,
+      SUM(estado = 'J') AS justificadas
+    FROM asistencia
+    GROUP BY alumnoId
+  `;
+  const [rows] = await pool.query(sql);
+  return rows;
+}
+
 module.exports = {
   getAsistenciaPorFecha,
   getAsistenciaPorAlumno,
   registrarAsistencia,
   registrarAsistenciaMasiva,
+  getResumenAsistenciaTodos
 };

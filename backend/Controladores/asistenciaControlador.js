@@ -34,4 +34,14 @@ async function registrarMasiva(req, res) {
   }
 }
 
-module.exports = { getAsistenciaPorFecha, getAsistenciaAlumno, registrarMasiva };
+async function getResumenTodos(req, res) {
+  try {
+    const data = await asistModelo.getResumenAsistenciaTodos();
+    res.json(data);
+  } catch (error) {
+    console.error("Error resumen asistencia:", error);
+    res.status(500).json({ mensaje: "Error en el servidor" });
+  }
+}
+
+module.exports = { getAsistenciaPorFecha, getAsistenciaAlumno, registrarMasiva, getResumenTodos };

@@ -85,65 +85,78 @@
     </div>
   </div>
  
-  <!-- ══ DASHBOARD ══ -->
-  <div class="page active" id="p-Inicio">
-    <div class="kpi-grid">
-      <div class="kpi-card kc1">
-        <div class="kpi-icon">👥</div>
-        <div class="kpi-num">28</div>
-        <div class="kpi-label">Alumnos activos</div>
+  <!-- ══ DASHBOARD ══ --> 
+  <div class="page active" id="p-Inicio"> 
+    <div class="kpi-grid"> 
+      <div class="kpi-card kc1"> 
+        <div class="kpi-icon">👥</div> 
+        <div class="kpi-num"> </div> 
+        <div class="kpi-label">Alumnos activos</div> 
+      </div> 
+      <div class="kpi-card kc2"> 
+        <div class="kpi-icon">✅</div> 
+        <div class="kpi-num"> </div> 
+        <div class="kpi-label">Asistencia hoy</div> 
+      </div> 
+      <div class="kpi-card kc3"> 
+        <div class="kpi-icon">📝</div> 
+        <div class="kpi-num"> </div> 
+        <div class="kpi-label">Promedio grupal</div> 
+      </div> 
+      <div class="kpi-card kc4"> 
+        <div class="kpi-icon">💬</div> 
+        <div class="kpi-num"> </div> 
+        <div class="kpi-label">Mensajes nuevos</div> 
       </div>
-      <div class="kpi-card kc2">
-        <div class="kpi-icon">✅</div>
-        <div class="kpi-num">92%</div>
-        <div class="kpi-label">Asistencia hoy</div>
-      </div>
-      <div class="kpi-card kc3">
-        <div class="kpi-icon">📝</div>
-        <div class="kpi-num">8.4</div>
-        <div class="kpi-label">Promedio grupal</div>
-      </div>
-      <div class="kpi-card kc4">
-        <div class="kpi-icon">💬</div>
-        <div class="kpi-num">3</div>
-        <div class="kpi-label">Mensajes nuevos</div>
-      </div>
-    </div>
- 
-    <div class="dash-grid">
-      <div class="card">
-        <div class="card-title-row">
-          <span class="card-heading">Alumnos destacados 🌟</span>
-          <span class="view-all" onclick="goTo('alumnos',null)">Ver todos →</span>
-        </div>
-        <div id="dash-alumnos-list"></div>
-      </div>
-      <div class="card">
-        <div class="card-title-row">
-          <span class="card-heading">Actividad reciente</span>
-        </div>
-        <div class="activity-item">
-          <div class="act-icon ai-teal">📝</div>
-          <div><div class="act-text">Observación registrada para <b>Carlos M.</b></div><div class="act-time">Hace 10 minutos</div></div>
-        </div>
-        <div class="activity-item">
-          <div class="act-icon ai-rose">💬</div>
-          <div><div class="act-text">Nuevo mensaje de mamá de <b>Sofía G.</b></div><div class="act-time">Hace 25 minutos</div></div>
-        </div>
-        <div class="activity-item">
-          <div class="act-icon ai-amber">📅</div>
-          <div><div class="act-text">Cita confirmada con familia de <b>Luis R.</b></div><div class="act-time">Hace 1 hora</div></div>
-        </div>
-        <div class="activity-item">
-          <div class="act-icon ai-purple">📢</div>
-          <div><div class="act-text">Aviso publicado: <b>Junta mensual</b></div><div class="act-time">Hoy 8:30 AM</div></div>
-        </div>
-        <div class="activity-item">
-          <div class="act-icon ai-teal">✅</div>
-          <div><div class="act-text">Asistencia registrada para <b>3°B</b></div><div class="act-time">Hoy 7:55 AM</div></div>
-        </div>
-      </div>
-    </div>
+    </div> 
+    <div class="dash-grid"> 
+      <div class="card"> 
+        <div class="card-title-row"> 
+          <span class="card-heading">Alumnos destacados 🌟</span> 
+          <span class="view-all" onclick="goTo('alumnos',null)">Ver todos →</span> 
+        </div> 
+        <div id="dash-alumnos-list"></div> 
+      </div> 
+      <div class="card"> 
+          <div class="card-title-row"> 
+            <span class="card-heading">Actividad reciente</span> 
+          </div> 
+        <div class="activity-item"> 
+          <div class="act-icon ai-teal">📝</div> 
+          <div>
+            <div class="act-text">Observación registrada para <b>Carlos M.</b></div>
+            <div class="act-time">Hace 10 minutos</div>
+          </div> 
+        </div> 
+        <div class="activity-item"> 
+          <div class="act-icon ai-rose">💬</div> 
+          <div>
+            <div class="act-text">Nuevo mensaje de mamá de <b>Sofía G.</b></div>
+            <div class="act-time">Hace 25 minutos</div>
+          </div> 
+        </div> 
+        <div class="activity-item"> <div class="act-icon ai-amber">📅</div> 
+        <div>
+          <div class="act-text">Cita confirmada con familia de <b>Luis R.</b></div>
+          <div class="act-time">Hace 1 hora</div>
+        </div> 
+      </div> 
+      <div class="activity-item"> 
+        <div class="act-icon ai-purple">📢</div> 
+        <div>
+          <div class="act-text">Aviso publicado: <b>Junta mensual</b></div>
+          <div class="act-time">Hoy 8:30 AM</div>
+        </div> 
+      </div> 
+      <div class="activity-item"> 
+        <div class="act-icon ai-teal">✅</div> 
+        <div>
+          <div class="act-text">Asistencia registrada para <b>3°B</b></div>
+          <div class="act-time">Hoy 7:55 AM</div>
+        </div> 
+      </div> 
+      </div> 
+    </div> 
   </div>
  
   <!-- ══ ALUMNOS ══ -->

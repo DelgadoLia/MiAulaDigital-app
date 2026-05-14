@@ -206,6 +206,8 @@ let aseoRol   = {};
 let chatConversaciones = [];
 let mesnajes = [];
 let aseoData = [];
+let dashboard = [];
+let resumenAsistencia = [];
 let currentChat = 0;
 
 const aseoActividades = ['Barrer','Trapear','Limpiar pizarrón','Organizar pupitres','Recoger basura'];
@@ -220,10 +222,75 @@ async function iniciarPanelDocente() {
   requireAuth('docente');
   const nb = document.querySelector('.teacher-name');
   if (nb) nb.textContent = localStorage.getItem('nombre') || 'Docente';
-  await Promise.all([ cargarAlumnos(), cargarCalificaciones(), cargarAvisos(), cargarCitas(), cargarChatsDocente(), cargarCitas() ]);
+  await Promise.all([ cargarAlumnos(), cargarCalificaciones(), cargarAvisos(), cargarCitas(), cargarChatsDocente(), cargarCitas(), cargarObservaciones(), cargarResumenAsistencia(), ]);
   setFechaHoy();
   renderCal();
   shuffleAseo();
+  cargarDashboardDocente();
+  enriquecerAlumnos();
+}
+
+async function cargarResumenAsistencia() {
+  try {
+    resumenAsistencia = await apiFetch('/asistencia/resumen');
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+function enriquecerAlumnos() {
+  alumnos = alumnos.map(a => {
+    const cals = califData
+      .filter(c => c.alumno === a.nombre)
+      .map(c => parseFloat(c.calificacion || 0));
+
+    const prom = cals.length
+      ? (cals.reduce((s, v) => s + v, 0) / cals.length).toFixed(1)
+      : null;
+
+    const asist = resumenAsistencia.find(r => r.alumnoId === a.id);
+    const pctAsist = asist && asist.total > 0
+      ? Math.round((asist.presentes / asist.total) * 100) + '%'
+      : '—';
+
+    return {
+      ...a,
+      promedio: prom,
+      porcentajeAsistencia: pctAsist,
+      estado: prom >= 9 ? 'Excelente' : prom >= 7 ? 'Regular' : 'Atención'
+    };
+  });
+
+  renderAlumnos(alumnos);
+  renderDashAlumnos();
+}
+
+
+async function cargarDashboardDocente() {
+  const kc1 = document.querySelector('.kpi-card.kc1 .kpi-num');
+  if (kc1) kc1.textContent = alumnos.length;
+
+  const porAlumno = {};
+  califData.forEach(c => {
+    if (!porAlumno[c.alumnoId]) porAlumno[c.alumnoId] = [];
+    porAlumno[c.alumnoId].push(parseFloat(c.calificacion || 0));
+  });
+  const proms = Object.values(porAlumno)
+    .map(arr => arr.reduce((a, b) => a + b, 0) / arr.length);
+  const promGrupal = proms.length
+    ? (proms.reduce((a, b) => a + b, 0) / proms.length).toFixed(1)
+    : '—';
+  const kc3 = document.querySelector('.kpi-card.kc3 .kpi-num');
+  if (kc3) kc3.textContent = promGrupal;
+
+  try {
+    const convs = await apiFetch('/mensajes/conversaciones');
+    const noLeidos = convs.reduce((sum, c) => sum + (c.noLeidos || 0), 0);
+    const kc4 = document.querySelector('.kpi-card.kc4 .kpi-num');
+    if (kc4) kc4.textContent = noLeidos;
+  } catch (err) {
+    console.log('Error mensajes no leídos:', err);
+  }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -233,7 +300,6 @@ async function cargarAlumnos() {
   try {
     alumnos = await apiFetch('/alumnos');
     renderAlumnos(alumnos);
-    renderDashAlumnos();
     poblarSelectAlumnos();
     cargarAsistenciaHoy();
   } catch { mostrarToast('⚠ Error al cargar alumnos'); }
@@ -242,20 +308,32 @@ async function cargarAlumnos() {
 function renderAlumnos(list) {
   const tb = document.getElementById('alumnos-tbody');
   if (!tb) return;
+
   tb.innerHTML = list.map((a, i) => {
+    const fecha = a.fechaNac
+      ? new Date(a.fechaNac).toLocaleDateString('es-MX', { day:'2-digit', month:'long', year:'numeric' })
+      : '—';
+
     const prom  = a.promedio ?? '—';
-    const asist = a.porcentajeAsistencia ?? '—';
     const sc    = a.estado === 'Excelente' ? 'sp-green' : a.estado === 'Atención' ? 'sp-rose' : 'sp-amber';
+    const asist = resumenAsistencia.find(r => r.alumnoId === a.id);
+
     return `<tr>
       <td style="color:var(--muted);font-size:.8rem;">${String(i+1).padStart(2,'0')}</td>
       <td><div style="display:flex;align-items:center;gap:.6rem;">
         <div class="alumno-av">${a.nombre[0]}</div>
-        <div><div class="alumno-name">${a.nombre}</div><div class="alumno-sub">${a.fechaNac||''}</div></div>
+        <div>
+          <div class="alumno-name">${a.nombre}</div>
+          <div class="alumno-sub">${fecha}</div>
+        </div>
       </div></td>
-      <td style="color:var(--muted);font-size:.83rem;">${a.fechaNac||'—'}</td>
+      <td style="color:var(--muted);font-size:.83rem;">${fecha}</td>
       <td><span class="grade-badge ${prom>=9?'gb-a':prom>=7?'gb-b':'gb-c'}">${prom}</span></td>
-      <td style="font-size:.84rem;font-weight:600;">${asist}%</td>
-      <td><span class="status-pill ${sc}">${a.estado||'Regular'}</span></td>
+      <td>
+        <span style="font-size:.84rem;font-weight:700;color:var(--mint-d);">✅ ${asist ? asist.presentes : '—'}</span>
+        <span style="font-size:.75rem;color:var(--muted);"> / ${asist ? asist.total : '—'} días</span>
+      </td>
+      <td><span class="status-pill ${sc}">${a.estado || 'Regular'}</span></td>
       <td>
         <button class="btn-icon" title="Observación"
           onclick="goTo('observaciones',document.querySelectorAll('.nav-item')[3])">📝</button>
@@ -311,6 +389,8 @@ async function cargarCalificaciones(bimestre = 1) {
   try {
     califData = await apiFetch(`/calificaciones?bimestre=${bimestre}`);
     renderCalif(califData);
+    // Agrega esto temporalmente en cargarCalificaciones
+console.log('califData[0]:', califData[0]);
   } catch { mostrarToast('⚠ Error al cargar calificaciones'); }
 }
 
@@ -392,6 +472,14 @@ async function cargarAsistenciaHoy() {
   renderAsistencia();
 }
 
+function actualizarKpiAsistencia() {
+  const total = alumnos.length;
+  if (!total) return;
+  const presentes = alumnos.filter(a => asistData[a.id]?.['Hoy'] === 'P').length;
+  const pct = Math.round((presentes / total) * 100);
+  document.querySelector('.kpi-card.kc2 .kpi-num').textContent = pct + '%';
+}
+
 function renderAsistencia() {
   const tb = document.getElementById('asist-tbody');
   if (!tb) return;
@@ -416,6 +504,16 @@ function renderAsistencia() {
       ${semDias}${hoyBtn}
     </tr>`;
   }).join('');
+  actualizarKpiAsistencia();
+}
+
+function actualizarKpiAsistencia() {
+  const total = alumnos.length;
+  if (!total) return;
+  const presentes = alumnos.filter(a => asistData[a.id]?.['Hoy'] === 'P').length;
+  const pct = Math.round((presentes / total) * 100);
+  const kc2 = document.querySelector('.kpi-card.kc2 .kpi-num');
+  if (kc2) kc2.textContent = pct + '%';
 }
 
 function cycleAsist(id, dia) {

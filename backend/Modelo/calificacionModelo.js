@@ -10,7 +10,7 @@ async function getCalificacionesPorAlumno(alumnoId, bimestre = null) {
 
 async function getCalificacionesTodos(bimestre = 1) {
   const sql = `
-    SELECT a.nombre AS alumno, c.materia, c.calificacion, c.bimestre, c.fecha
+    SELECT c.alumnoId, a.nombre AS alumno, c.materia, c.calificacion, c.bimestre, c.fecha
     FROM calificaciones c
     JOIN alumnos a ON a.id = c.alumnoId
     WHERE c.bimestre = ?
