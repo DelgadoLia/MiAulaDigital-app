@@ -181,15 +181,8 @@
  
   <!-- ══ CALIFICACIONES ══ -->
   <div class="page" id="p-calificaciones">
-    <div class="section-heading">Calificaciones</div>
-    <div class="section-desc">Registro de tareas y calificaciones por alumno y actividad</div>
     <div class="toolbar">
       <input class="search-input" type="text" placeholder="🔍  Buscar alumno..." oninput="filterCalif(this.value)">
-      <select class="filter-select" onchange="filterByMateria(this.value)">
-        <option value="">Todas las materias</option>
-        <option>Español</option><option>Matemáticas</option><option>Ciencias</option>
-        <option>Historia</option><option>Educación Física</option>
-      </select>
       <button class="btn-action" onclick="openAddTarea()">+ Nueva actividad</button>
     </div>
     <div class="tabla-wrap">

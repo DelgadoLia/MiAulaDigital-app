@@ -21,12 +21,40 @@ async function getCalificacionesTodos(bimestre = 1) {
 }
 
 async function upsertCalificacion(alumnoId, materia, calificacion, bimestre, fecha) {
+
   const sql = `
-    INSERT INTO calificaciones (alumnoId, materia, calificacion, bimestre, fecha)
-    VALUES (?, ?, ?, ?, ?)
-    ON DUPLICATE KEY UPDATE calificacion = VALUES(calificacion), fecha = VALUES(fecha)
+    UPDATE calificaciones
+    SET calificacion = ?, fecha = ?
+    WHERE alumnoId = ?
+      AND materia = ?
+      AND bimestre = ?
   `;
-  const [result] = await pool.query(sql, [alumnoId, materia, calificacion, bimestre, fecha]);
+
+  const [result] = await pool.query(sql, [
+    calificacion,
+    fecha,
+    alumnoId,
+    materia,
+    bimestre
+  ]);
+
+  return result;
+}
+
+async function crearActividad(titulo, materia, bimestre, fecha) {
+
+  const sql = `
+    INSERT INTO actividades (titulo, materia, bimestre, fecha)
+    VALUES (?, ?, ?, ?)
+  `;
+
+  const [result] = await pool.query(sql, [
+    titulo,
+    materia,
+    bimestre,
+    fecha
+  ]);
+
   return result;
 }
 
@@ -34,4 +62,5 @@ module.exports = {
   getCalificacionesPorAlumno,
   getCalificacionesTodos,
   upsertCalificacion,
+  crearActividad,
 };

@@ -6,5 +6,5 @@ const { verificarToken, soloDocente } = require("../Middleware/verificarToken");
 router.get("/",                   verificarToken, ctrl.getCalificacionesTodos);
 router.get("/:alumnoId",          verificarToken, ctrl.getCalificacionesAlumno);
 router.post("/",                  verificarToken, soloDocente, ctrl.guardarCalificacion);
-
+router.post('/actividad', verificarToken, soloDocente, ctrl.nuevaActividad);
 module.exports = router;

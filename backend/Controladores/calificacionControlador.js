@@ -34,4 +34,39 @@ async function guardarCalificacion(req, res) {
   }
 }
 
-module.exports = { getCalificacionesAlumno, getCalificacionesTodos, guardarCalificacion };
+async function nuevaActividad(req, res) {
+  try {
+    console.log(req.body);
+    const {
+      titulo,
+      materia,
+      bimestre,
+      fecha
+    } = req.body;
+
+    if (!titulo || !materia)
+      return res.status(400).json({
+        mensaje: 'Faltan datos'
+      });
+
+    await califModelo.crearActividad(
+      titulo,
+      materia,
+      bimestre,
+      fecha || new Date()
+    );
+
+    res.json({
+      mensaje: 'Actividad creada'
+    });
+
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
+      mensaje: 'Error en el servidor'
+    });
+  }
+}
+
+module.exports = { getCalificacionesAlumno, getCalificacionesTodos, guardarCalificacion, nuevaActividad };

@@ -411,7 +411,7 @@ function renderCalif(list) {
     const grades = materias.map(m =>
       `<td><input class="grade-input" type="number" min="0" max="10" step="0.1"
         value="${data.notas[m] ?? ''}"
-        onchange="guardarCalif(${alumnoId},'${m}',this.value)"></td>`
+        id="input-${alumnoId}-${m}"></td>`
     ).join('');
     const vals = materias.map(m => parseFloat(data.notas[m] || 0));
     const prom = (vals.reduce((s,v) => s+v, 0) / vals.length).toFixed(1);
@@ -422,9 +422,50 @@ function renderCalif(list) {
       </div></td>
       ${grades}
       <td><span class="grade-badge ${prom>=9?'gb-a':prom>=7?'gb-b':'gb-c'}">${prom}</span></td>
-      <td><span id="sv-${alumnoId}">💾</span></td>
+      <td>
+        <button
+          class="btn-save"
+          onclick="guardarFila(${alumnoId})">
+          💾
+        </button>
+      </td>
     </tr>`;
   }).join('');
+}
+
+async function guardarFila(alumnoId) {
+  const materias = [
+    'Español',
+    'Matemáticas',
+    'Ciencias',
+    'Historia',
+    'Ed. Física'
+  ];
+
+  try {
+    for (const materia of materias) {
+      const input = document.getElementById(
+        `input-${alumnoId}-${materia}`
+      );
+      const nota = parseFloat(input.value);
+      if (isNaN(nota))
+        continue;
+      console.log('Guardando:', { alumnoId, materia, nota });
+      await apiFetch('/calificaciones', {
+        method: 'POST',
+        body: JSON.stringify({
+          alumnoId,
+          materia,
+          calificacion: nota,
+          bimestre: 1
+        })
+      });
+    }
+    mostrarToast('✅ Calificaciones guardadas');
+  } catch (err) {
+    console.log(err);
+    mostrarToast('❌ Error al guardar');
+  }
 }
 
 // Se llama automáticamente al cambiar cualquier input de calificación
@@ -1213,11 +1254,74 @@ function renderAseo() {
   `).join('');
 }
 
+function openAddTarea() {
+  Swal.fire({
+    title: '📝 Nueva actividad',
+    html: `
+      <div style="text-align:left;display:flex;flex-direction:column;gap:.8rem;margin-top:.5rem;">
+        <div>
+          <label style="font-size:.82rem;font-weight:700;color:#3d3060;display:block;margin-bottom:.3rem;">Nombre de la actividad</label>
+          <input id="swal-titulo" class="swal2-input" placeholder="Ej. Examen bimestral" style="margin:0;width:100%;">
+        </div>
+        <div>
+          <label style="font-size:.82rem;font-weight:700;color:#3d3060;display:block;margin-bottom:.3rem;">Materia</label>
+          <select id="swal-materia" class="swal2-select" style="margin:0;width:100%;padding:.5rem;border-radius:8px;border:1px solid #d0c8f0;">
+            <option value="">— Selecciona —</option>
+            <option>Español</option>
+            <option>Matemáticas</option>
+            <option>Ciencias</option>
+            <option>Historia</option>
+            <option>Ed. Física</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:.82rem;font-weight:700;color:#3d3060;display:block;margin-bottom:.3rem;">Fecha de entrega</label>
+          <input id="swal-fecha" type="date" class="swal2-input" style="margin:0;width:100%;" value="${new Date().toISOString().split('T')[0]}">
+        </div>
+        <div>
+          <label style="font-size:.82rem;font-weight:700;color:#3d3060;display:block;margin-bottom:.3rem;">Bimestre</label>
+          <select id="swal-bimestre" class="swal2-select" style="margin:0;width:100%;padding:.5rem;border-radius:8px;border:1px solid #d0c8f0;">
+            <option value="1">1er Bimestre</option>
+            <option value="2">2do Bimestre</option>
+            <option value="3">3er Bimestre</option>
+            <option value="4">4to Bimestre</option>
+          </select>
+        </div>
+      </div>
+    `,
+    confirmButtonText: '📤 Crear actividad',
+    cancelButtonText: 'Cancelar',
+    showCancelButton: true,
+    confirmButtonColor: '#9b7ee8',
+    cancelButtonColor: '#f07090',
+    preConfirm: () => {
+      const titulo   = document.getElementById('swal-titulo').value.trim();
+      const materia  = document.getElementById('swal-materia').value;
+      const fecha    = document.getElementById('swal-fecha').value;
+      const bimestre = document.getElementById('swal-bimestre').value;
+      if (!titulo)  return Swal.showValidationMessage('⚠ Escribe el nombre de la actividad');
+      if (!materia) return Swal.showValidationMessage('⚠ Selecciona una materia');
+      if (!fecha)   return Swal.showValidationMessage('⚠ Selecciona una fecha');
+      return { titulo, materia, fecha, bimestre: parseInt(bimestre) };
+    }
+  }).then(async result => {
+    if (!result.isConfirmed) return;
+    try {
+      await apiFetch('/calificaciones/actividad', {
+        method: 'POST',
+        body: JSON.stringify(result.value)
+      });
+      mostrarToast('✅ Actividad creada');
+    } catch {
+      mostrarToast('❌ Error al crear actividad');
+    }
+  });
+}
+
 // ═══════════════════════════════════════════════════════
 //  MODALS / OVERLAYS
 // ═══════════════════════════════════════════════════════
 function openAddAlumno() { document.getElementById('modal-alumno')?.classList.add('open'); }
-function openAddTarea()   { document.getElementById('modal-tarea')?.classList.add('open'); }
 function openAddCita()    { poblarSelectAlumnos(); document.getElementById('modal-cita')?.classList.add('open'); }
 function closeOverlay(id) { document.getElementById(id)?.classList.remove('open'); }
 
